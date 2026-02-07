@@ -2,9 +2,10 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Home } from "lucide-react";
-import { getMovieDetail } from "@/lib/api/ophim";
+import { getMovieDetail, getMoviePeoples } from "@/lib/api/ophim";
 import VideoPlayer from "./VideoPlayer";
 import EpisodeSelector from "./EpisodeSelector";
+import MovieInfoDetails from "@/components/movie/MovieInfoDetails";
 
 interface Props {
     params: Promise<{ slug: string; episode: string }>;
@@ -30,8 +31,13 @@ export default async function WatchPage({ params }: Props) {
     const { slug, episode } = await params;
 
     let data;
+    let peoplesData = null;
+
     try {
-        data = await getMovieDetail(slug);
+        [data, peoplesData] = await Promise.all([
+            getMovieDetail(slug),
+            getMoviePeoples(slug).catch(() => null) // Fallback if peoples API fails
+        ]);
     } catch {
         notFound();
     }
@@ -41,6 +47,7 @@ export default async function WatchPage({ params }: Props) {
     }
 
     const movie = data.movie;
+    const peoples = peoplesData?.data?.peoples || [];
     const episodes = data.episodes || movie.episodes || [];
 
     // Find current episode
@@ -114,8 +121,8 @@ export default async function WatchPage({ params }: Props) {
                     )}
 
                     <Link
-                        href={`/phim/${slug}`}
-                        className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+                        href="#movie-info"
+                        className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors text-sm font-medium"
                     >
                         Thông tin phim
                     </Link>
@@ -136,8 +143,11 @@ export default async function WatchPage({ params }: Props) {
             </div>
 
             {/* Episode selector */}
-            <div className="container mx-auto px-4 py-6 border-t border-border">
-                <h2 className="text-lg font-bold mb-4">Chọn tập</h2>
+            <div className="container mx-auto px-4 py-6 border-t border-white/5">
+                <h2 className="text-xl font-black mb-6 flex items-center gap-3">
+                    <div className="w-1.5 h-6 bg-primary rounded-full" />
+                    Chọn tập
+                </h2>
                 <EpisodeSelector
                     episodes={episodes}
                     movieSlug={slug}
@@ -145,21 +155,9 @@ export default async function WatchPage({ params }: Props) {
                 />
             </div>
 
-            {/* Movie info summary */}
-            <div className="container mx-auto px-4 py-6 border-t border-border">
-                <h1 className="text-xl font-bold mb-2">{movie.name}</h1>
-                <p className="text-foreground-secondary">{movie.origin_name}</p>
-                <div className="flex flex-wrap gap-2 mt-4">
-                    {movie.category?.map((cat: { slug: string; name: string }) => (
-                        <Link
-                            key={cat.slug}
-                            href={`/the-loai/${cat.slug}`}
-                            className="px-3 py-1 bg-white/10 hover:bg-white/20 text-sm rounded-full transition-colors"
-                        >
-                            {cat.name}
-                        </Link>
-                    ))}
-                </div>
+            {/* Movie Info Details Section */}
+            <div id="movie-info" className="container mx-auto px-4 scroll-mt-20 border-t border-white/5">
+                <MovieInfoDetails movie={movie} peoples={peoples} />
             </div>
         </div>
     );

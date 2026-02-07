@@ -102,8 +102,8 @@ export default function VideoPlayer({
                     {/* Source toggle - if m3u8 is available */}
                     {m3u8Url && (
                         <div className="flex items-center gap-2 text-sm">
-                            <span className="text-foreground-muted">Nguồn:</span>
-                            <button
+                            {/* <span className="text-foreground-muted">Nguồn:</span> */}
+                            {/* <button
                                 onClick={() => setUseEmbed(true)}
                                 className={`px-3 py-1 rounded-lg transition-colors ${useEmbed ? "bg-primary text-white" : "bg-white/10 hover:bg-white/20"
                                     }`}
@@ -116,7 +116,7 @@ export default function VideoPlayer({
                                     }`}
                             >
                                 M3U8
-                            </button>
+                            </button> */}
                         </div>
                     )}
                 </div>

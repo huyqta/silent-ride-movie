@@ -24,14 +24,17 @@ import {
     Calendar,
     Ticket,
     Users,
+    Globe,
+    Layers,
 } from "lucide-react";
 import { useStore } from "@/lib/store/useStore";
+import { getCategories, getCountries } from "@/lib/api/ophim";
 
 const navItems = [
     { name: "Phim Lẻ", href: "/danh-sach/phim-le", icon: Film },
     { name: "Phim Bộ", href: "/danh-sach/phim-bo", icon: Tv },
     { name: "Hoạt Hình", href: "/danh-sach/hoat-hinh", icon: Gamepad2 },
-    { name: "TV Shows", href: "/danh-sach/tv-shows", icon: Monitor },
+    { name: "Tìm phim", href: "/tim-kiem-nang-cao", icon: Search },
 ];
 
 const exploreItems = [
@@ -50,10 +53,31 @@ export default function Header() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [searchOpen, setSearchOpen] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const [exploreOpen, setExploreOpen] = useState(false);
+    const [activeMenu, setActiveMenu] = useState<string | null>(null);
+
+    const [genres, setGenres] = useState<any[]>([]);
+    const [countries, setCountries] = useState<any[]>([]);
+
     const [searchQuery, setSearchQuery] = useState("");
     const searchInputRef = useRef<HTMLInputElement>(null);
     const { favorites, watchHistory } = useStore();
+
+    // Fetch navigation data
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [gData, cData] = await Promise.all([
+                    getCategories(),
+                    getCountries(),
+                ]);
+                setGenres(gData?.data?.items || []);
+                setCountries(cData?.data?.items || []);
+            } catch (error) {
+                console.error("Failed to fetch header data:", error);
+            }
+        };
+        fetchData();
+    }, []);
 
     // Handle scroll effect
     useEffect(() => {
@@ -100,7 +124,7 @@ export default function Header() {
                                     <Film className="w-5 h-5 md:w-6 md:h-6 text-white" />
                                 </div>
                                 <span className="text-xl md:text-2xl font-bold bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
-                                    SilentRide
+                                    Silent Ride [HKU]
                                 </span>
                             </motion.div>
                         </Link>
@@ -118,23 +142,99 @@ export default function Header() {
                                 </Link>
                             ))}
 
-                            {/* Explore Dropdown */}
-                            <div className="relative group/explore">
+                            {/* Thể loại Dropdown */}
+                            <div
+                                className="relative group"
+                                onMouseEnter={() => setActiveMenu("genres")}
+                                onMouseLeave={() => setActiveMenu(null)}
+                            >
                                 <button
-                                    onMouseEnter={() => setExploreOpen(true)}
-                                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground-secondary hover:text-white transition-colors rounded-lg hover:bg-white/5"
+                                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-foreground-secondary hover:text-white transition-colors rounded-lg hover:bg-white/5"
                                 >
-                                    Khám phá
-                                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${exploreOpen ? "rotate-180" : ""}`} />
+                                    Thể loại
+                                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${activeMenu === "genres" ? "rotate-180" : ""}`} />
                                 </button>
-
                                 <AnimatePresence>
-                                    {exploreOpen && (
+                                    {activeMenu === "genres" && (
                                         <motion.div
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             exit={{ opacity: 0, y: 10 }}
-                                            onMouseLeave={() => setExploreOpen(false)}
+                                            className="absolute top-full left-0 mt-2 w-[480px] glass rounded-xl border border-white/10 shadow-2xl overflow-hidden p-4"
+                                        >
+                                            <div className="grid grid-cols-3 gap-1 max-h-[60vh] overflow-y-auto scrollbar-hide">
+                                                {genres.map((genre) => (
+                                                    <Link
+                                                        key={genre.slug}
+                                                        href={`/the-loai/${genre.slug}`}
+                                                        onClick={() => setActiveMenu(null)}
+                                                        className="px-3 py-2 text-xs text-foreground-secondary hover:text-primary hover:bg-white/5 rounded-lg transition-colors"
+                                                    >
+                                                        {genre.name}
+                                                    </Link>
+                                                ))}
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+
+                            {/* Quốc gia Dropdown */}
+                            <div
+                                className="relative group"
+                                onMouseEnter={() => setActiveMenu("countries")}
+                                onMouseLeave={() => setActiveMenu(null)}
+                            >
+                                <button
+                                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-foreground-secondary hover:text-white transition-colors rounded-lg hover:bg-white/5"
+                                >
+                                    Quốc gia
+                                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${activeMenu === "countries" ? "rotate-180" : ""}`} />
+                                </button>
+                                <AnimatePresence>
+                                    {activeMenu === "countries" && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: 10 }}
+                                            className="absolute top-full left-0 mt-2 w-[400px] glass rounded-xl border border-white/10 shadow-2xl overflow-hidden p-4"
+                                        >
+                                            <div className="grid grid-cols-2 gap-1 max-h-[60vh] overflow-y-auto scrollbar-hide">
+                                                {countries.map((country) => (
+                                                    <Link
+                                                        key={country.slug}
+                                                        href={`/quoc-gia/${country.slug}`}
+                                                        onClick={() => setActiveMenu(null)}
+                                                        className="px-3 py-2 text-xs text-foreground-secondary hover:text-primary hover:bg-white/5 rounded-lg transition-colors"
+                                                    >
+                                                        {country.name}
+                                                    </Link>
+                                                ))}
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+
+                            {/* Explore Dropdown (Danh sách) */}
+                            <div
+                                className="relative group/explore"
+                                onMouseEnter={() => setActiveMenu("explore")}
+                                onMouseLeave={() => setActiveMenu(null)}
+                            >
+                                <button
+                                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-foreground-secondary hover:text-white transition-colors rounded-lg hover:bg-white/5"
+                                >
+                                    Danh sách
+                                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${activeMenu === "explore" ? "rotate-180" : ""}`} />
+                                </button>
+
+                                <AnimatePresence>
+                                    {activeMenu === "explore" && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: 10 }}
                                             className="absolute top-full left-0 mt-2 w-64 glass rounded-xl border border-white/10 shadow-2xl overflow-hidden overflow-y-auto max-h-[70vh] scrollbar-hide"
                                         >
                                             <div className="p-2 grid grid-cols-1 gap-1">
@@ -142,7 +242,7 @@ export default function Header() {
                                                     <Link
                                                         key={item.href}
                                                         href={item.href}
-                                                        onClick={() => setExploreOpen(false)}
+                                                        onClick={() => setActiveMenu(null)}
                                                         className="flex items-center gap-3 px-4 py-3 text-sm text-foreground-secondary hover:text-white hover:bg-white/5 rounded-lg transition-colors group/item"
                                                     >
                                                         <item.icon className="w-4 h-4 text-foreground-muted group-hover/item:text-primary transition-colors" />
@@ -245,7 +345,7 @@ export default function Header() {
                                     </button>
                                 </div>
                                 <p className="text-center text-foreground-muted text-sm mt-4">
-                                    Nhấn Enter để tìm kiếm hoặc ESC để đóng
+                                    Nhấn Enter để tìm kiếm hoặc ESC để đóng. <Link href="/tim-kiem-nang-cao" onClick={() => setSearchOpen(false)} className="text-primary hover:underline ml-1">Tìm kiếm nâng cao</Link>
                                 </p>
                             </form>
                         </motion.div>
@@ -278,7 +378,53 @@ export default function Header() {
                                 ))}
 
                                 <div className="pt-4 pb-2 px-4">
-                                    <p className="text-xs font-semibold text-foreground-muted uppercase tracking-wider">Khám phá thêm</p>
+                                    <p className="text-xs font-semibold text-foreground-muted uppercase tracking-wider">Thể loại</p>
+                                </div>
+                                <div className="grid grid-cols-2 gap-1 px-2">
+                                    {genres.slice(0, 10).map((genre: any) => (
+                                        <Link
+                                            key={genre.slug}
+                                            href={`/the-loai/${genre.slug}`}
+                                            onClick={() => setMobileMenuOpen(false)}
+                                            className="px-4 py-2 text-sm text-foreground-secondary hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                                        >
+                                            {genre.name}
+                                        </Link>
+                                    ))}
+                                    <Link
+                                        href="/tim-kiem-nang-cao"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className="px-4 py-2 text-sm text-primary hover:underline transition-colors"
+                                    >
+                                        Xem tất cả...
+                                    </Link>
+                                </div>
+
+                                <div className="pt-4 pb-2 px-4">
+                                    <p className="text-xs font-semibold text-foreground-muted uppercase tracking-wider">Quốc gia</p>
+                                </div>
+                                <div className="grid grid-cols-2 gap-1 px-2">
+                                    {countries.slice(0, 10).map((country: any) => (
+                                        <Link
+                                            key={country.slug}
+                                            href={`/quoc-gia/${country.slug}`}
+                                            onClick={() => setMobileMenuOpen(false)}
+                                            className="px-4 py-2 text-sm text-foreground-secondary hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                                        >
+                                            {country.name}
+                                        </Link>
+                                    ))}
+                                    <Link
+                                        href="/tim-kiem-nang-cao"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className="px-4 py-2 text-sm text-primary hover:underline transition-colors"
+                                    >
+                                        Xem tất cả...
+                                    </Link>
+                                </div>
+
+                                <div className="pt-4 pb-2 px-4">
+                                    <p className="text-xs font-semibold text-foreground-muted uppercase tracking-wider">Danh sách</p>
                                 </div>
 
                                 {exploreItems.map((item) => (

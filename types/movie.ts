@@ -17,6 +17,16 @@ export interface Movie {
     year: number;
     category: Category[];
     country: Country[];
+    tmdb?: {
+        type?: string;
+        id?: string;
+        season?: number;
+        vote_average?: number;
+        vote_count?: number;
+    };
+    imdb?: {
+        id?: string;
+    };
 }
 
 export interface MovieDetail extends Movie {
@@ -55,6 +65,28 @@ export interface Country {
     id: string;
     name: string;
     slug: string;
+}
+
+export interface Person {
+    tmdb_people_id: number;
+    name: string;
+    original_name: string;
+    character: string;
+    known_for_department: string;
+    profile_path: string | null;
+}
+
+export interface MoviePeoplesResponse {
+    success: boolean;
+    message: string;
+    data: {
+        tmdb_id: number;
+        tmdb_type: string;
+        ophim_id: string;
+        slug: string;
+        imdb_id: string;
+        peoples: Person[];
+    };
 }
 
 // API Response Types
