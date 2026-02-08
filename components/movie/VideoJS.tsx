@@ -28,16 +28,24 @@ export const VideoJS = (props: VideoJSProps) => {
         } else {
             const player = playerRef.current;
 
-            // Only update sources if they have changed to avoid restarting playback
-            const currentSrc = player.currentSrc();
-            const newSrc = options.sources?.[0]?.src;
+            if (player) {
+                // Only update sources if they have changed to avoid restarting playback
+                const currentSrc = player.currentSrc();
+                const newSrc = options.sources?.[0]?.src;
 
-            if (newSrc && currentSrc !== newSrc) {
-                player.src(options.sources);
-            }
+                if (newSrc && currentSrc !== newSrc) {
+                    player.src(options.sources);
+                    if (options.autoplay) {
+                        player.play().catch(() => {
+                            // Browser might block autoplay if no interaction
+                            console.log("Autoplay prevented");
+                        });
+                    }
+                }
 
-            if (options.autoplay !== undefined) {
-                player.autoplay(options.autoplay);
+                if (options.autoplay !== undefined) {
+                    player.autoplay(options.autoplay);
+                }
             }
         }
     }, [options]); // Only depend on options
@@ -64,6 +72,14 @@ export const VideoJS = (props: VideoJSProps) => {
                     height: 100% !important;
                     border-radius: 0.5rem;
                     overflow: hidden;
+                    background-color: transparent !important;
+                }
+                .vjs-tech {
+                    background-color: transparent !important;
+                }
+                /* Hide default loading spinner to use our custom one */
+                .vjs-loading-spinner {
+                    display: none !important;
                 }
                 .vjs-big-play-button {
                     background-color: #e11d48 !important;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Maximize2, Volume2, VolumeX, Play, Pause, RotateCcw, RotateCw, Settings } from "lucide-react";
 import { useStore } from "@/lib/store/useStore";
@@ -18,6 +19,8 @@ interface VideoPlayerProps {
     episodeName: string;
     embedUrl: string;
     m3u8Url: string;
+    prevEpisodeSlug?: string;
+    nextEpisodeSlug?: string;
 }
 
 export default function VideoPlayer({
@@ -28,7 +31,10 @@ export default function VideoPlayer({
     episodeName,
     embedUrl,
     m3u8Url,
+    prevEpisodeSlug,
+    nextEpisodeSlug,
 }: VideoPlayerProps) {
+    const router = useRouter();
     const playerRef = useRef<Player | null>(null);
     const { updateProgress, getProgress, addToHistory } = useStore();
     const [isLoading, setIsLoading] = useState(true);
@@ -147,6 +153,7 @@ export default function VideoPlayer({
         vjsEl.addEventListener('touchend', handleTap as any);
     };
 
+
     // Handlers for custom controls
     const togglePlay = useCallback(() => {
         if (playerRef.current) {
@@ -190,12 +197,50 @@ export default function VideoPlayer({
         }
     }, []);
 
+    // Keyboard Hotkeys
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Don't trigger if user is typing in an input
+            if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+                return;
+            }
+
+            switch (e.key) {
+                case "ArrowLeft":
+                    e.preventDefault();
+                    skipTime(-10);
+                    break;
+                case "ArrowRight":
+                    e.preventDefault();
+                    skipTime(10);
+                    break;
+                case "ArrowUp":
+                    e.preventDefault();
+                    if (nextEpisodeSlug) {
+                        router.push(`/xem-phim/${movieSlug}/${nextEpisodeSlug}`);
+                    }
+                    break;
+                case "ArrowDown":
+                    e.preventDefault();
+                    if (prevEpisodeSlug) {
+                        router.push(`/xem-phim/${movieSlug}/${prevEpisodeSlug}`);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [skipTime, nextEpisodeSlug, prevEpisodeSlug, movieSlug, router]);
+
     const handleIframeLoad = () => {
         setIsLoading(false);
     };
 
     const videoJsOptions = useMemo(() => ({
-        autoplay: false,
+        autoplay: true,
         controls: true,
         responsive: true,
         fluid: true,
@@ -218,15 +263,22 @@ export default function VideoPlayer({
         <div className="relative">
             {/* Video container with 16:9 aspect ratio */}
             <div className="relative aspect-video bg-black rounded-lg overflow-hidden group">
-                {/* Loading overlay */}
-                {isLoading && (
-                    <div className="absolute inset-0 z-10 flex items-center justify-center bg-background-secondary">
-                        <div className="flex flex-col items-center gap-4">
-                            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                            <p className="text-foreground-secondary">Đang tải...</p>
-                        </div>
-                    </div>
-                )}
+                {/* Loading overlay - Now semi-transparent to keep video frame visible */}
+                <AnimatePresence>
+                    {isLoading && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 z-10 flex items-center justify-center bg-black/20 backdrop-blur-[2px]"
+                        >
+                            <div className="relative">
+                                <div className="w-16 h-16 border-4 border-primary/30 rounded-full" />
+                                <div className="absolute inset-0 w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {/* Custom Player for M3U8 using Video.js */}
                 {!useEmbed && m3u8Url && (

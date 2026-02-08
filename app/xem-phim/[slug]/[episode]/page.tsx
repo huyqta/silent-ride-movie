@@ -101,6 +101,8 @@ export default async function WatchPage({ params }: Props) {
                     episodeName={currentEpisode.name}
                     embedUrl={currentEpisode.link_embed}
                     m3u8Url={currentEpisode.link_m3u8}
+                    prevEpisodeSlug={prevEpisode?.slug}
+                    nextEpisodeSlug={nextEpisode?.slug}
                 />
             </div>
 

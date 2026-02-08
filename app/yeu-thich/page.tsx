@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Trash2 } from "lucide-react";
+import { Heart, Trash2, Info } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useStore } from "@/lib/store/useStore";
@@ -54,6 +54,16 @@ export default function FavoritesPage() {
                         Xóa tất cả
                     </button>
                 )}
+            </div>
+
+            <div className="flex items-start gap-3 p-4 mb-8 bg-primary/5 border border-primary/10 rounded-2xl text-xs md:text-sm text-foreground-secondary">
+                <Info className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                <div>
+                    <p className="font-semibold text-white mb-0.5">Lưu ý về thiết bị</p>
+                    <p>
+                        Danh sách này được lưu trữ cục bộ trên trình duyệt của bạn để đảm bảo tốc độ và sự riêng tư. Thông tin sẽ <span className="text-primary font-medium">không được đồng bộ</span> khi bạn chuyển sang thiết bị hoặc trình duyệt khác.
+                    </p>
+                </div>
             </div>
 
             {favorites.length > 0 ? (

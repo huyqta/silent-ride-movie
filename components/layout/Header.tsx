@@ -26,9 +26,11 @@ import {
     Users,
     Globe,
     Layers,
+    HelpCircle,
 } from "lucide-react";
 import { useStore } from "@/lib/store/useStore";
 import { getCategories, getCountries } from "@/lib/api/ophim";
+import HelpDialog from "@/components/ui/HelpDialog";
 
 const navItems = [
     { name: "Phim Lẻ", href: "/danh-sach/phim-le", icon: Film },
@@ -54,6 +56,7 @@ export default function Header() {
     const [searchOpen, setSearchOpen] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [activeMenu, setActiveMenu] = useState<string | null>(null);
+    const [helpOpen, setHelpOpen] = useState(false);
 
     const [genres, setGenres] = useState<any[]>([]);
     const [countries, setCountries] = useState<any[]>([]);
@@ -88,6 +91,18 @@ export default function Header() {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
+    // Check for first visit
+    useEffect(() => {
+        const hasVisited = localStorage.getItem("silent-ride-visited");
+        if (!hasVisited) {
+            const timer = setTimeout(() => {
+                setHelpOpen(true);
+                localStorage.setItem("silent-ride-visited", "true");
+            }, 2000);
+            return () => clearTimeout(timer);
+        }
+    }, []);
+
     // Focus search input when opened
     useEffect(() => {
         if (searchOpen && searchInputRef.current) {
@@ -114,18 +129,35 @@ export default function Header() {
                 <div className="container mx-auto px-4">
                     <div className="flex items-center justify-between h-16 md:h-20">
                         {/* Logo */}
-                        <Link href="/" className="flex items-center gap-2 group">
+                        <Link href="/" className="flex items-center gap-3 group">
                             <motion.div
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                className="flex items-center gap-2"
+                                className="flex items-center gap-3"
                             >
-                                <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-primary to-red-700 rounded-lg flex items-center justify-center">
-                                    <Film className="w-5 h-5 md:w-6 md:h-6 text-white" />
+                                <div className="relative w-10 h-10 md:w-12 md:h-12 flex items-center justify-center overflow-hidden rounded-xl bg-black/50 group-hover:border-primary/50 transition-colors">
+                                    <img
+                                        src="/logo.png"
+                                        alt="HKU Logo"
+                                        className="w-full h-full object-cover transform scale-110 group-hover:scale-125 transition-transform duration-500"
+                                        onError={(e) => {
+                                            // Fallback if image not found
+                                            (e.target as any).style.display = 'none';
+                                            (e.target as any).nextSibling.style.display = 'flex';
+                                        }}
+                                    />
+                                    <div style={{ display: 'none' }} className="absolute inset-0 bg-gradient-to-br from-primary to-red-700 items-center justify-center">
+                                        <Film className="w-6 h-6 text-white" />
+                                    </div>
                                 </div>
-                                <span className="text-xl md:text-2xl font-bold bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
-                                    Silent Ride [HKU]
-                                </span>
+                                <div className="flex flex-col">
+                                    <span className="text-xl md:text-2xl font-bold bg-gradient-to-r from-white via-white to-zinc-400 bg-clip-text text-transparent">
+                                        Silent Ride
+                                    </span>
+                                    <span className="text-[10px] md:text-xs font-medium text-primary tracking-[0.2em] uppercase leading-none">
+                                        HQ - Premium Streaming
+                                    </span>
+                                </div>
                             </motion.div>
                         </Link>
 
@@ -258,6 +290,17 @@ export default function Header() {
 
                         {/* Right Actions */}
                         <div className="flex items-center gap-2">
+                            {/* Help Button */}
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => setHelpOpen(true)}
+                                className="p-2 text-foreground-secondary hover:text-white transition-colors rounded-lg hover:bg-white/5"
+                                aria-label="Hướng dẫn"
+                            >
+                                <HelpCircle className="w-5 h-5" />
+                            </motion.button>
+
                             {/* Search Button */}
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
@@ -484,6 +527,8 @@ export default function Header() {
                     />
                 )}
             </AnimatePresence>
+
+            <HelpDialog isOpen={helpOpen} onClose={() => setHelpOpen(false)} />
         </>
     );
 }

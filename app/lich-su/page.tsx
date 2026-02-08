@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { History, Trash2, Play, Clock } from "lucide-react";
+import { History, Trash2, Play, Clock, Info } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useStore } from "@/lib/store/useStore";
@@ -46,6 +46,16 @@ export default function HistoryPage() {
                         Xóa tất cả
                     </button>
                 )}
+            </div>
+
+            <div className="flex items-start gap-3 p-4 mb-8 bg-accent/5 border border-accent/10 rounded-2xl text-xs md:text-sm text-foreground-secondary">
+                <Info className="w-5 h-5 text-accent flex-shrink-0 mt-0.5" />
+                <div>
+                    <p className="font-semibold text-white mb-0.5">Lưu ý về thiết bị</p>
+                    <p>
+                        Lịch sử xem phim được lưu trữ cục bộ trên trình duyệt của bạn. Thông tin này sẽ <span className="text-accent font-medium">không được đồng bộ</span> khi bạn chuyển sang thiết bị hoặc trình duyệt khác.
+                    </p>
+                </div>
             </div>
 
             {watchHistory.length > 0 ? (
