@@ -87,7 +87,7 @@ export default async function WatchPage({ params }: Props) {
                         {movie.name}
                     </Link>
                     <ChevronRight className="w-4 h-4" />
-                    <span className="text-white">{currentEpisode.name}</span>
+                    <span className="text-white">Tập {currentEpisode.name}</span>
                 </nav>
             </div>
 
@@ -105,7 +105,7 @@ export default async function WatchPage({ params }: Props) {
             </div>
 
             {/* Navigation buttons */}
-            <div className="container mx-auto px-4 py-4">
+            {/* <div className="container mx-auto px-4 py-4">
                 <div className="flex items-center justify-between gap-4">
                     {prevEpisode ? (
                         <Link
@@ -126,7 +126,7 @@ export default async function WatchPage({ params }: Props) {
                     >
                         Thông tin phim
                     </Link>
-
+                    
                     {nextEpisode ? (
                         <Link
                             href={`/xem-phim/${slug}/${nextEpisode.slug}`}
@@ -140,7 +140,7 @@ export default async function WatchPage({ params }: Props) {
                         <div />
                     )}
                 </div>
-            </div>
+            </div> */}
 
             {/* Episode selector */}
             <div className="container mx-auto px-4 py-6 border-t border-white/5">

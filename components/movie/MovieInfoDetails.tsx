@@ -57,7 +57,63 @@ export default function MovieInfoDetails({ movie, peoples = [] }: MovieInfoDetai
                         </p>
                     )}
                 </div>
+                {/* Movie Description / Summary */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 pt-8 border-t border-white/5">
+                    <div className="lg:col-span-2 space-y-6">
+                        <h2 className="text-2xl font-black text-white">Nội dung phim</h2>
+                        <div className="space-y-4">
+                            <div
+                                className="text-foreground-secondary leading-relaxed text-sm md:text-base font-medium prose prose-invert max-w-none"
+                                dangerouslySetInnerHTML={{ __html: movie.content }}
+                            />
+                        </div>
+                    </div>
 
+                    <div className="space-y-8">
+                        {/* Additional Metadata */}
+                        <div className="space-y-4">
+                            <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
+                                <Calendar className="w-4 h-4 text-primary" /> Chi tiết
+                            </h3>
+                            <div className="space-y-3">
+                                <div className="flex justify-between items-center text-xs py-2 border-b border-white/5">
+                                    <span className="text-foreground-muted">Đạo diễn:</span>
+                                    <span className="text-white font-bold">{movie.director?.join(", ") || "N/A"}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-xs py-2 border-b border-white/5">
+                                    <span className="text-foreground-muted">Thời lượng:</span>
+                                    <span className="text-white font-bold">{movie.time || "N/A"}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-xs py-2 border-b border-white/5">
+                                    <span className="text-foreground-muted">Phát hành:</span>
+                                    <span className="text-white font-bold">{movie.year}</span>
+                                </div>
+                                <div className="flex justify-between items-center text-xs py-2 border-b border-white/5">
+                                    <span className="text-foreground-muted">Chất lượng:</span>
+                                    <span className="text-white font-bold">{movie.quality}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Tags / Types */}
+                        <div className="space-y-4">
+                            <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
+                                <Tag className="w-4 h-4 text-primary" /> Từ khóa
+                            </h3>
+                            <div className="flex flex-wrap gap-2">
+                                {movie.category?.map(cat => (
+                                    <Link
+                                        key={cat.slug}
+                                        href={`/the-loai/${cat.slug}`}
+                                        className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-[10px] font-bold text-foreground-secondary hover:text-white rounded-lg transition-all border border-white/10"
+                                    >
+                                        #{cat.slug}
+                                    </Link>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <div className="flex flex-wrap gap-2 text-xs font-bold uppercase tracking-widest">
                     <span className="px-3 py-1 bg-white/10 text-white rounded-md border border-white/5">
                         {movie.type === "series" ? "Phim Bộ" : "Phim Lẻ"}
@@ -263,63 +319,7 @@ export default function MovieInfoDetails({ movie, peoples = [] }: MovieInfoDetai
                 </div>
             )}
 
-            {/* Movie Description / Summary */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 pt-8 border-t border-white/5">
-                <div className="lg:col-span-2 space-y-6">
-                    <h2 className="text-2xl font-black text-white">Nội dung phim</h2>
-                    <div className="space-y-4">
-                        <div
-                            className="text-foreground-secondary leading-relaxed text-sm md:text-base font-medium prose prose-invert max-w-none"
-                            dangerouslySetInnerHTML={{ __html: movie.content }}
-                        />
-                    </div>
-                </div>
 
-                <div className="space-y-8">
-                    {/* Additional Metadata */}
-                    <div className="space-y-4">
-                        <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
-                            <Calendar className="w-4 h-4 text-primary" /> Chi tiết
-                        </h3>
-                        <div className="space-y-3">
-                            <div className="flex justify-between items-center text-xs py-2 border-b border-white/5">
-                                <span className="text-foreground-muted">Đạo diễn:</span>
-                                <span className="text-white font-bold">{movie.director?.join(", ") || "N/A"}</span>
-                            </div>
-                            <div className="flex justify-between items-center text-xs py-2 border-b border-white/5">
-                                <span className="text-foreground-muted">Thời lượng:</span>
-                                <span className="text-white font-bold">{movie.time || "N/A"}</span>
-                            </div>
-                            <div className="flex justify-between items-center text-xs py-2 border-b border-white/5">
-                                <span className="text-foreground-muted">Phát hành:</span>
-                                <span className="text-white font-bold">{movie.year}</span>
-                            </div>
-                            <div className="flex justify-between items-center text-xs py-2 border-b border-white/5">
-                                <span className="text-foreground-muted">Chất lượng:</span>
-                                <span className="text-white font-bold">{movie.quality}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Tags / Types */}
-                    <div className="space-y-4">
-                        <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
-                            <Tag className="w-4 h-4 text-primary" /> Từ khóa
-                        </h3>
-                        <div className="flex flex-wrap gap-2">
-                            {movie.category?.map(cat => (
-                                <Link
-                                    key={cat.slug}
-                                    href={`/the-loai/${cat.slug}`}
-                                    className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-[10px] font-bold text-foreground-secondary hover:text-white rounded-lg transition-all border border-white/10"
-                                >
-                                    #{cat.slug}
-                                </Link>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     );
 }
