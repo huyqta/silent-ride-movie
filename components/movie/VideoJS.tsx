@@ -36,10 +36,13 @@ export const VideoJS = (props: VideoJSProps) => {
                 if (newSrc && currentSrc !== newSrc) {
                     player.src(options.sources);
                     if (options.autoplay) {
-                        player.play().catch(() => {
-                            // Browser might block autoplay if no interaction
-                            console.log("Autoplay prevented");
-                        });
+                        const playPromise = player.play();
+                        if (playPromise !== undefined) {
+                            playPromise.catch(() => {
+                                // Browser might block autoplay if no interaction
+                                console.log("Autoplay prevented");
+                            });
+                        }
                     }
                 }
 

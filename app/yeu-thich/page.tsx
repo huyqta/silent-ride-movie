@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Trash2, Info } from "lucide-react";
 import Image from "next/image";
@@ -12,6 +12,11 @@ import MovieGrid from "@/components/movie/MovieGrid";
 export default function FavoritesPage() {
     const { favorites, removeFromFavorites, clearFavorites } = useStore();
     const [showConfirm, setShowConfirm] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const handleClearAll = () => {
         clearFavorites();
@@ -66,9 +71,9 @@ export default function FavoritesPage() {
                 </div>
             </div>
 
-            {favorites.length > 0 ? (
+            {mounted && favorites.length > 0 ? (
                 <MovieGrid movies={movies} showProgress={false} />
-            ) : (
+            ) : mounted ? (
                 <div className="text-center py-16">
                     <Heart className="w-16 h-16 text-foreground-muted mx-auto mb-4" />
                     <p className="text-foreground-secondary text-lg mb-4">
@@ -80,6 +85,10 @@ export default function FavoritesPage() {
                     >
                         Khám phá phim
                     </Link>
+                </div>
+            ) : (
+                <div className="h-96 flex items-center justify-center">
+                    <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
                 </div>
             )}
 

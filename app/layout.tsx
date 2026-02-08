@@ -27,6 +27,10 @@ export const metadata: Metadata = {
     locale: "vi_VN",
     siteName: "SilentRide",
   },
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({

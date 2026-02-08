@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { History, Trash2, Play, Clock, Info } from "lucide-react";
 import Image from "next/image";
@@ -11,6 +11,11 @@ import { getImageUrl } from "@/lib/api/ophim";
 export default function HistoryPage() {
     const { watchHistory, removeFromHistory, clearHistory, getProgress } = useStore();
     const [showConfirm, setShowConfirm] = useState(false);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const handleClearAll = () => {
         clearHistory();
@@ -58,7 +63,7 @@ export default function HistoryPage() {
                 </div>
             </div>
 
-            {watchHistory.length > 0 ? (
+            {mounted && watchHistory.length > 0 ? (
                 <div className="space-y-4">
                     {watchHistory.map((item) => {
                         const progress = getProgress(item.slug);
@@ -134,7 +139,7 @@ export default function HistoryPage() {
                         );
                     })}
                 </div>
-            ) : (
+            ) : mounted ? (
                 <div className="text-center py-16">
                     <History className="w-16 h-16 text-foreground-muted mx-auto mb-4" />
                     <p className="text-foreground-secondary text-lg mb-4">
@@ -146,6 +151,10 @@ export default function HistoryPage() {
                     >
                         Khám phá phim
                     </Link>
+                </div>
+            ) : (
+                <div className="h-96 flex items-center justify-center">
+                    <div className="w-12 h-12 border-4 border-accent/30 border-t-accent rounded-full animate-spin" />
                 </div>
             )}
 

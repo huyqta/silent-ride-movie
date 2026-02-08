@@ -57,6 +57,7 @@ export default function Header() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [activeMenu, setActiveMenu] = useState<string | null>(null);
     const [helpOpen, setHelpOpen] = useState(false);
+    const [mounted, setMounted] = useState(false);
 
     const [genres, setGenres] = useState<any[]>([]);
     const [countries, setCountries] = useState<any[]>([]);
@@ -67,6 +68,7 @@ export default function Header() {
 
     // Fetch navigation data
     useEffect(() => {
+        setMounted(true);
         const fetchData = async () => {
             try {
                 const [gData, cData] = await Promise.all([
@@ -330,7 +332,7 @@ export default function Header() {
                                 className="hidden md:flex items-center gap-1 p-2 text-foreground-secondary hover:text-white transition-colors rounded-lg hover:bg-white/5 relative"
                             >
                                 <Heart className="w-5 h-5" />
-                                {favorites.length > 0 && (
+                                {mounted && favorites.length > 0 && (
                                     <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-white text-xs rounded-full flex items-center justify-center">
                                         {favorites.length > 9 ? "9+" : favorites.length}
                                     </span>
@@ -343,7 +345,7 @@ export default function Header() {
                                 className="hidden md:flex items-center gap-1 p-2 text-foreground-secondary hover:text-white transition-colors rounded-lg hover:bg-white/5 relative"
                             >
                                 <History className="w-5 h-5" />
-                                {watchHistory.length > 0 && (
+                                {mounted && watchHistory.length > 0 && (
                                     <span className="absolute -top-1 -right-1 w-4 h-4 bg-accent text-white text-xs rounded-full flex items-center justify-center">
                                         {watchHistory.length > 9 ? "9+" : watchHistory.length}
                                     </span>
@@ -531,7 +533,7 @@ export default function Header() {
                                 >
                                     <Heart className="w-5 h-5" />
                                     Yêu thích
-                                    {favorites.length > 0 && (
+                                    {mounted && favorites.length > 0 && (
                                         <span className="ml-auto px-2 py-0.5 bg-primary text-white text-xs rounded-full">
                                             {favorites.length}
                                         </span>
@@ -544,7 +546,7 @@ export default function Header() {
                                 >
                                     <History className="w-5 h-5" />
                                     Lịch sử xem
-                                    {watchHistory.length > 0 && (
+                                    {mounted && watchHistory.length > 0 && (
                                         <span className="ml-auto px-2 py-0.5 bg-accent text-white text-xs rounded-full">
                                             {watchHistory.length}
                                         </span>
