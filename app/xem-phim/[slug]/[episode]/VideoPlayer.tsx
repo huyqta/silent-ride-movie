@@ -80,6 +80,49 @@ export default function VideoPlayer({
         return () => clearInterval(saveInterval);
     }, [movieSlug, episode, episodeName, updateProgress]);
 
+    // Handlers for custom controls
+    const togglePlay = useCallback(() => {
+        if (playerRef.current) {
+            if (playerRef.current.paused()) {
+                playerRef.current.play();
+            } else {
+                playerRef.current.pause();
+            }
+        }
+    }, []);
+
+    const skipTime = useCallback((amount: number) => {
+        if (playerRef.current) {
+            const player = playerRef.current;
+            const currentTime = player.currentTime() || 0;
+            const duration = player.duration() || 0;
+            let newTime = currentTime + amount;
+
+            // Boundary checks
+            if (newTime < 0) newTime = 0;
+            if (newTime > duration) newTime = duration;
+
+            player.currentTime(newTime);
+
+            // Force play if it was playing or intended to be playing
+            // Seek operations on HLS sometimes stall or transition to a paused-like state
+            if (!player.paused()) {
+                // Small delay sometimes helps with HLS seek stability
+                setTimeout(() => {
+                    player.play()?.catch(() => { });
+                }, 50);
+            }
+        }
+    }, [playerRef]);
+
+    const toggleMute = useCallback(() => {
+        if (playerRef.current) {
+            const currentMuted = playerRef.current.muted();
+            playerRef.current.muted(!currentMuted);
+            setIsMuted(!currentMuted);
+        }
+    }, []);
+
     const handlePlayerReady = (player: Player) => {
         playerRef.current = player;
         setIsLoading(false);
@@ -146,56 +189,27 @@ export default function VideoPlayer({
             const feedback = document.createElement('div');
             feedback.className = `skip-feedback ${side}`;
             feedback.innerHTML = side === 'left' ? '↺ 10s' : '10s ↻';
+            feedback.style.cssText = `
+                position: absolute;
+                top: 50%;
+                ${side === 'left' ? 'left: 15%' : 'right: 15%'};
+                transform: translate(-50%, -50%);
+                background: rgba(0,0,0,0.5);
+                color: white;
+                padding: 15px;
+                border-radius: 50%;
+                font-size: 14px;
+                font-weight: bold;
+                z-index: 100;
+                pointer-events: none;
+                animation: skip-fade 0.5s ease-out forwards;
+            `;
             vjsEl.appendChild(feedback);
             setTimeout(() => feedback.remove(), 500);
         };
 
         vjsEl.addEventListener('touchend', handleTap as any);
     };
-
-
-    // Handlers for custom controls
-    const togglePlay = useCallback(() => {
-        if (playerRef.current) {
-            if (playerRef.current.paused()) {
-                playerRef.current.play();
-            } else {
-                playerRef.current.pause();
-            }
-        }
-    }, []);
-
-    const skipTime = useCallback((amount: number) => {
-        if (playerRef.current) {
-            const player = playerRef.current;
-            const currentTime = player.currentTime() || 0;
-            const duration = player.duration() || 0;
-            let newTime = currentTime + amount;
-
-            // Boundary checks
-            if (newTime < 0) newTime = 0;
-            if (newTime > duration) newTime = duration;
-
-            player.currentTime(newTime);
-
-            // Force play if it was playing or intended to be playing
-            // Seek operations on HLS sometimes stall or transition to a paused-like state
-            if (!player.paused()) {
-                // Small delay sometimes helps with HLS seek stability
-                setTimeout(() => {
-                    player.play()?.catch(() => { });
-                }, 50);
-            }
-        }
-    }, [playerRef]);
-
-    const toggleMute = useCallback(() => {
-        if (playerRef.current) {
-            const currentMuted = playerRef.current.muted();
-            playerRef.current.muted(!currentMuted);
-            setIsMuted(!currentMuted);
-        }
-    }, []);
 
     // Keyboard Hotkeys
     useEffect(() => {

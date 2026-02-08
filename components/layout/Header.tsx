@@ -110,6 +110,18 @@ export default function Header() {
         }
     }, [searchOpen]);
 
+    // Lock body scroll when mobile menu is open
+    useEffect(() => {
+        if (mobileMenuOpen) {
+            document.body.style.overflow = "hidden";
+        } else {
+            document.body.style.overflow = "unset";
+        }
+        return () => {
+            document.body.style.overflow = "unset";
+        };
+    }, [mobileMenuOpen]);
+
     // Handle search submit
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -404,10 +416,39 @@ export default function Header() {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: "100%" }}
                         transition={{ type: "tween" }}
-                        className="fixed inset-y-0 right-0 z-[55] w-80 max-w-full bg-background-secondary border-l border-border lg:hidden"
+                        className="fixed inset-y-0 right-0 z-[55] w-80 max-w-full bg-background-secondary border-l border-border lg:hidden flex flex-col"
                     >
-                        <div className="flex flex-col h-full pt-20 pb-6 px-4">
-                            <nav className="flex-1 space-y-1">
+                        {/* Mobile Menu Header with Logo */}
+                        <div className="flex items-center justify-between p-4 border-b border-white/5">
+                            <Link href="/" className="flex items-center gap-2 group" onClick={() => setMobileMenuOpen(false)}>
+                                <div className="relative w-8 h-8 flex items-center justify-center overflow-hidden rounded-lg bg-black/50 border border-white/10 group-hover:border-primary/5 transition-colors">
+                                    <img
+                                        src="/logo.png"
+                                        alt="HKU"
+                                        className="w-full h-full object-cover transform scale-110"
+                                        onError={(e) => {
+                                            (e.target as any).style.display = 'none';
+                                            (e.target as any).nextSibling.style.display = 'flex';
+                                        }}
+                                    />
+                                    <div style={{ display: 'none' }} className="absolute inset-0 bg-gradient-to-br from-primary to-red-700 items-center justify-center">
+                                        <Film className="w-4 h-4 text-white" />
+                                    </div>
+                                </div>
+                                <span className="font-bold text-lg bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
+                                    Silent Ride
+                                </span>
+                            </Link>
+                            <button
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="p-2 hover:bg-white/5 rounded-lg transition-colors text-foreground-muted"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto scrollbar-hide pb-10 px-4">
+                            <nav className="pt-4 space-y-1">
                                 {navItems.map((item) => (
                                     <Link
                                         key={item.href}
