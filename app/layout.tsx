@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     siteName: "SilentRide",
   },
   icons: {
-    icon: "/logo.png",
+    icon: "/favicon.ico",
     apple: "/logo.png",
   },
 };
