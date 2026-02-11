@@ -208,6 +208,17 @@ export default function VideoPlayer({
             setTimeout(() => feedback.remove(), 500);
         };
 
+        // Desktop/Mobile click to play/pause
+        player.on('click', (e: any) => {
+            // Don't toggle if clicking on control bar or UI elements
+            if (e.target.closest('.vjs-control-bar') || e.target.closest('.vjs-modal-dialog')) return;
+
+            // Only toggle if it's a left click (button 0)
+            if (e.button === 0 || e.type === 'touchstart') {
+                togglePlay();
+            }
+        });
+
         vjsEl.addEventListener('touchend', handleTap as any);
     };
 
@@ -220,6 +231,11 @@ export default function VideoPlayer({
             }
 
             switch (e.key) {
+                case " ":
+                case "k": // Optional: k is common for YouTube
+                    e.preventDefault();
+                    togglePlay();
+                    break;
                 case "ArrowLeft":
                     e.preventDefault();
                     skipTime(-10);
@@ -247,7 +263,7 @@ export default function VideoPlayer({
 
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [skipTime, nextEpisodeSlug, prevEpisodeSlug, movieSlug, router]);
+    }, [skipTime, nextEpisodeSlug, prevEpisodeSlug, movieSlug, router, togglePlay]);
 
     // --- GLOBAL FULLSCREEN ORIENTATION LOCK ---
     useEffect(() => {
