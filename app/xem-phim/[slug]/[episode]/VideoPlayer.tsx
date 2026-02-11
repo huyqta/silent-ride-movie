@@ -249,6 +249,40 @@ export default function VideoPlayer({
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [skipTime, nextEpisodeSlug, prevEpisodeSlug, movieSlug, router]);
 
+    // --- GLOBAL FULLSCREEN ORIENTATION LOCK ---
+    useEffect(() => {
+        const handleGlobalFullscreenChange = () => {
+            const isFullscreen = !!(document.fullscreenElement || (document as any).webkitFullscreenElement);
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+            if (isMobile) {
+                if (isFullscreen) {
+                    if (screen.orientation && (screen.orientation as any).lock) {
+                        (screen.orientation as any).lock('landscape').catch(() => { });
+                    }
+                } else {
+                    if (screen.orientation && (screen.orientation as any).lock) {
+                        (screen.orientation as any).lock('portrait')
+                            .then(() => {
+                                if (screen.orientation.unlock) screen.orientation.unlock();
+                            })
+                            .catch(() => {
+                                if (screen.orientation.unlock) screen.orientation.unlock();
+                            });
+                    }
+                }
+            }
+        };
+
+        document.addEventListener('fullscreenchange', handleGlobalFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleGlobalFullscreenChange);
+
+        return () => {
+            document.removeEventListener('fullscreenchange', handleGlobalFullscreenChange);
+            document.removeEventListener('webkitfullscreenchange', handleGlobalFullscreenChange);
+        };
+    }, []);
+
     const handleIframeLoad = () => {
         setIsLoading(false);
     };

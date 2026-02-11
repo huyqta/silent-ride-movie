@@ -56,11 +56,31 @@ export default function Pagination({ currentPage, totalPages, baseUrl }: Paginat
 
     // Simple URL builder that handles both path-based and search params
     const getPageUrl = (page: number) => {
-        // Check if baseUrl already has query params
-        if (baseUrl.includes("?")) {
-            return `${baseUrl}&page=${page}`;
-        }
-        return `${baseUrl}?page=${page}`;
+        const [urlWithoutHash, hash] = baseUrl.split("#");
+        const [path, queryString] = urlWithoutHash.split("?");
+        const params = new URLSearchParams(queryString || "");
+
+        // Get existing params to re-order them as requested: genre, type, page, limit
+        const genre = params.get("genre");
+        const type = params.get("type");
+        const limit = params.get("limit") || "24";
+        const q = params.get("q");
+        const country = params.get("country");
+        const year = params.get("year");
+
+        // Rebuild with specific order
+        const newParams = new URLSearchParams();
+        if (genre) newParams.set("genre", genre);
+        if (type) newParams.set("type", type);
+        if (q) newParams.set("q", q);
+        if (country) newParams.set("country", country);
+        if (year) newParams.set("year", year);
+
+        newParams.set("page", page.toString());
+        newParams.set("limit", limit);
+
+        const newUrl = `${path}?${newParams.toString()}`;
+        return hash ? `${newUrl}#${hash}` : `${newUrl}#results`;
     };
 
     return (

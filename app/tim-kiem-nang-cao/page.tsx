@@ -12,6 +12,7 @@ interface Props {
         type?: string;
         year?: string;
         page?: string;
+        limit?: string;
     }>;
 }
 
@@ -30,6 +31,7 @@ export default async function AdvancedSearchPage({ searchParams }: Props) {
     const type = params.type ? params.type.split(",") : [];
     const year = params.year || "";
     const page = parseInt(params.page || "1", 10);
+    const limit = parseInt(params.limit || "24", 10);
 
     // Fetch filters data
     const [genresData, countriesData] = await Promise.all([
@@ -56,6 +58,7 @@ export default async function AdvancedSearchPage({ searchParams }: Props) {
             type,
             year,
             page,
+            limit,
         });
         movies = searchData?.data?.items || [];
         pagination = searchData?.data?.params?.pagination || { pageRanges: 1, currentPage: 1, totalItems: 0 };
@@ -65,14 +68,20 @@ export default async function AdvancedSearchPage({ searchParams }: Props) {
 
     const totalPages = pagination.pageRanges || 1;
 
-    // Build base URL for pagination
+    // Build base URL for pagination (without page and without fragment)
     const baseUrlParams = new URLSearchParams();
-    if (keyword) baseUrlParams.set("q", keyword);
     if (genre.length > 0) baseUrlParams.set("genre", genre.join(","));
-    if (country.length > 0) baseUrlParams.set("country", country.join(","));
     if (type.length > 0) baseUrlParams.set("type", type.join(","));
+    if (keyword) baseUrlParams.set("q", keyword);
+    if (country.length > 0) baseUrlParams.set("country", country.join(","));
     if (year) baseUrlParams.set("year", year);
-    const baseUrl = `/tim-kiem-nang-cao?${baseUrlParams.toString()}#results`;
+    baseUrlParams.set("limit", limit.toString());
+
+    const baseUrl = `/tim-kiem-nang-cao?${baseUrlParams.toString()}`;
+
+    // Collapse filter if we have results and either page > 1 or filters are applied
+    const hasFilters = !!keyword || genre.length > 0 || country.length > 0 || type.length > 0 || !!year;
+    const isCollapsed = page > 1 || (movies.length > 0 && hasFilters);
 
     return (
         <div className="container mx-auto px-4 py-8 min-h-screen">
@@ -87,6 +96,7 @@ export default async function AdvancedSearchPage({ searchParams }: Props) {
                 countries={countries}
                 types={types}
                 initialValues={{ keyword, genre, country, type, year }}
+                isCollapsed={isCollapsed}
             />
 
             {/* Results Section */}

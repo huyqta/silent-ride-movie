@@ -21,6 +21,7 @@ interface AdvancedSearchFormProps {
         type: string[];
         year: string;
     };
+    isCollapsed?: boolean;
 }
 
 export default function AdvancedSearchForm({
@@ -28,6 +29,7 @@ export default function AdvancedSearchForm({
     countries,
     types,
     initialValues,
+    isCollapsed = false,
 }: AdvancedSearchFormProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -38,7 +40,12 @@ export default function AdvancedSearchForm({
     const [selectedTypes, setSelectedTypes] = useState<string[]>(initialValues.type);
     const [year, setYear] = useState(initialValues.year);
 
-    const [showFilters, setShowFilters] = useState(true);
+    const [showFilters, setShowFilters] = useState(!isCollapsed);
+
+    // Sync with prop if it changes
+    useEffect(() => {
+        setShowFilters(!isCollapsed);
+    }, [isCollapsed]);
 
     // Years range
     const currentYear = new Date().getFullYear();
@@ -56,11 +63,15 @@ export default function AdvancedSearchForm({
         if (e) e.preventDefault();
 
         const params = new URLSearchParams();
-        if (keyword) params.set("q", keyword);
         if (selectedGenres.length > 0) params.set("genre", selectedGenres.join(","));
-        if (selectedCountries.length > 0) params.set("country", selectedCountries.join(","));
         if (selectedTypes.length > 0) params.set("type", selectedTypes.join(","));
+        if (keyword) params.set("q", keyword);
+        if (selectedCountries.length > 0) params.set("country", selectedCountries.join(","));
         if (year) params.set("year", year);
+
+        // Preserve or set default limit
+        const currentLimit = searchParams.get("limit") || "24";
+        params.set("limit", currentLimit);
 
         router.push(`/tim-kiem-nang-cao?${params.toString()}#results`);
     };
