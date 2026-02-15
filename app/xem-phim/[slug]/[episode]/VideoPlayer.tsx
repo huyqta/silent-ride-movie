@@ -150,26 +150,37 @@ export default function VideoPlayer({
             }
         });
 
-        // --- MOBILE DOUBLE TAP TO SKIP LOGIC ---
+        // --- MOBILE DOUBLE TAP TO SKIP & SINGLE TAP TO PLAY/PAUSE ---
         // We inject this directly into the Video.js DOM so it works in full-screen
         const vjsEl = player.el();
         let lastTap = 0;
+        let singleTapTimer: ReturnType<typeof setTimeout> | null = null;
+        let isTouchDevice = false;
 
-        const handleTap = (e: MouseEvent | TouchEvent) => {
+        const handleTouchTap = (e: TouchEvent) => {
+            isTouchDevice = true;
+
+            // Don't toggle if tapping on control bar or UI elements
+            if ((e.target as HTMLElement)?.closest?.('.vjs-control-bar') ||
+                (e.target as HTMLElement)?.closest?.('.vjs-modal-dialog')) return;
+
             const now = Date.now();
             const DOUBLE_TAP_DELAY = 300;
 
             if (now - lastTap < DOUBLE_TAP_DELAY) {
-                // Double tap detected
+                // Double tap detected - cancel pending single tap
+                if (singleTapTimer) {
+                    clearTimeout(singleTapTimer);
+                    singleTapTimer = null;
+                }
+
                 const rect = vjsEl.getBoundingClientRect();
                 let x = 0;
 
-                if ('changedTouches' in e && e.changedTouches.length > 0) {
+                if (e.changedTouches && e.changedTouches.length > 0) {
                     x = e.changedTouches[0].clientX;
-                } else if ('touches' in e && e.touches.length > 0) {
+                } else if (e.touches && e.touches.length > 0) {
                     x = e.touches[0].clientX;
-                } else if ('clientX' in e) {
-                    x = (e as MouseEvent).clientX;
                 }
 
                 const relativeX = x - rect.left;
@@ -181,6 +192,12 @@ export default function VideoPlayer({
                     skipTime(10);
                     showSkipFeedback('right');
                 }
+            } else {
+                // Single tap - delay to distinguish from double tap
+                singleTapTimer = setTimeout(() => {
+                    togglePlay();
+                    singleTapTimer = null;
+                }, DOUBLE_TAP_DELAY);
             }
             lastTap = now;
         };
@@ -208,18 +225,15 @@ export default function VideoPlayer({
             setTimeout(() => feedback.remove(), 500);
         };
 
-        // Desktop/Mobile click to play/pause
+        // Desktop click to play/pause (skip if touch device to avoid double-fire)
         player.on('click', (e: any) => {
+            if (isTouchDevice) return;
             // Don't toggle if clicking on control bar or UI elements
             if (e.target.closest('.vjs-control-bar') || e.target.closest('.vjs-modal-dialog')) return;
-
-            // Only toggle if it's a left click (button 0)
-            if (e.button === 0 || e.type === 'touchstart') {
-                togglePlay();
-            }
+            togglePlay();
         });
 
-        vjsEl.addEventListener('touchend', handleTap as any);
+        vjsEl.addEventListener('touchend', handleTouchTap as any);
     };
 
     // Keyboard Hotkeys
@@ -372,7 +386,7 @@ export default function VideoPlayer({
 
             {/* Quick Controls Bar (Desktop & Mobile) */}
             {!useEmbed && m3u8Url && (
-                <div className="hidden mt-4 flex items-center justify-center gap-4 md:gap-8 p-4 bg-background-secondary rounded-lg border border-white/5">
+                <div className="mt-4 flex items-center justify-center gap-4 md:gap-8 p-4 bg-background-secondary rounded-lg border border-white/5">
                     <button
                         onClick={() => skipTime(-10)}
                         className="p-2 hover:bg-white/10 rounded-full transition-colors group"
