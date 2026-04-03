@@ -1,5 +1,7 @@
 import { Metadata } from "next";
 import { getMoviesByGenre } from "@/lib/api/unified";
+
+export const revalidate = 3600;
 import MovieGrid from "@/components/movie/MovieGrid";
 import Pagination from "@/components/ui/Pagination";
 

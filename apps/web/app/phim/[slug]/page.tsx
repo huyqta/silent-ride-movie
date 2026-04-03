@@ -1,5 +1,7 @@
 import { Metadata } from "next";
 import Image from "next/image";
+
+export const revalidate = 3600;
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Play, Heart, Share2, Calendar, Clock, Globe, Star, ChevronRight } from "lucide-react";

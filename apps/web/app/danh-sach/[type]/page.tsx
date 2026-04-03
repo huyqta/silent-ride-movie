@@ -1,5 +1,7 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
+
+export const revalidate = 3600;
 import { getMoviesByType } from "@/lib/api/unified";
 import MovieGrid from "@/components/movie/MovieGrid";
 import Pagination from "@/components/ui/Pagination";
@@ -57,7 +59,6 @@ export default async function MovieListPage({ params, searchParams }: Props) {
     const pagination = data?.data?.params?.pagination || {};
     const totalItems = pagination.totalItems || movies.length;
     const totalPages = Math.ceil(totalItems / 24) || 1;
-    const title = data?.data?.titlePage || typeNames[type];
 
     return (
         <div className="container mx-auto px-4 py-8">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useStore } from "@/lib/store/useStore";
 import { useProfileStore } from "@/lib/store/useProfileStore";
@@ -20,7 +20,6 @@ interface VideoPlayerProps {
     prevEpisodeSlug?: string;
     nextEpisodeSlug?: string;
     serverIndex?: number;
-    initialTime?: number;
     nguonCData?: any;
     phimApiData?: any;
 }
@@ -36,11 +35,12 @@ export default function VideoPlayer({
     prevEpisodeSlug,
     nextEpisodeSlug,
     serverIndex,
-    initialTime,
     nguonCData,
     phimApiData,
 }: VideoPlayerProps) {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const initialTime = searchParams.get('t') ? Math.floor(Number(searchParams.get('t'))) : undefined;
     const playerRef = useRef<any>(null);
     const { updateProgress, addToHistory } = useStore();
     const { currentProfile, updateWatchProgress } = useProfileStore();

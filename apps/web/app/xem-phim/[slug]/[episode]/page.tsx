@@ -1,5 +1,7 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
+
+export const revalidate = 3600;
 import Link from "next/link";
 import { ChevronRight, Home } from "lucide-react";
 import { getMovieDetail, getMoviePeoples, getMovieDetailNguonC, getMovieDetailPhimApi } from "@/lib/api/ophim";
@@ -9,7 +11,7 @@ import MovieInfoDetails from "@/components/movie/MovieInfoDetails";
 
 interface Props {
     params: Promise<{ slug: string; episode: string }>;
-    searchParams: Promise<{ t?: string; sv?: string }>;
+    searchParams: Promise<{ sv?: string }>;
 }
 
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
@@ -32,8 +34,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 
 export default async function WatchPage({ params, searchParams }: Props) {
     const { slug, episode } = await params;
-    const { t, sv } = await searchParams;
-    const initialTime = t ? Math.floor(Number(t)) : undefined;
+    const { sv } = await searchParams;
     const requestedServerIndex = sv ? parseInt(sv) : undefined;
 
     let data;
@@ -123,7 +124,7 @@ export default async function WatchPage({ params, searchParams }: Props) {
                     prevEpisodeSlug={prevEpisode?.slug}
                     nextEpisodeSlug={nextEpisode?.slug}
                     serverIndex={currentServerIndex}
-                    initialTime={initialTime}
+
                     nguonCData={nguonCData}
                     phimApiData={phimApiData}
                 />

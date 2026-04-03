@@ -1,7 +1,8 @@
-import { Suspense } from "react";
+export const revalidate = 3600;
+
 import HeroBanner from "@/components/movie/HeroBanner";
 import MovieSlider from "@/components/movie/MovieSlider";
-import { MovieSliderSkeleton, HeroSkeleton } from "@/components/ui/Skeleton";
+import { HeroSkeleton } from "@/components/ui/Skeleton";
 import { getNewlyUpdatedMovies, getMoviesByType } from "@/lib/api/unified";
 
 async function getHomeData() {
