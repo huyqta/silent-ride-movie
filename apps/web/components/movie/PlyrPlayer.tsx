@@ -38,7 +38,7 @@ export const PlyrPlayer = forwardRef<PlyrPlayerHandle, PlyrPlayerProps>((props, 
         
         const defaultOptions = {
             controls: [
-                'restart', 'rewind', 'play', 'fast-forward',
+                'play',
                 'progress', 'current-time', 'duration', 'mute', 'volume',
                 'captions', 'settings', 'pip', 'airplay', 'fullscreen'
             ],
@@ -47,7 +47,7 @@ export const PlyrPlayer = forwardRef<PlyrPlayerHandle, PlyrPlayerProps>((props, 
             displayDuration: true,
             invertTime: false,
             toggleInvert: false,
-            clickToPlay: true,
+            clickToPlay: false,
             blankVideo: 'https://cdn.plyr.io/static/blank.mp4', // Explicitly set or use an alternative
             keyboard: { focused: true, global: true },
             ...options
@@ -58,11 +58,10 @@ export const PlyrPlayer = forwardRef<PlyrPlayerHandle, PlyrPlayerProps>((props, 
                 try {
                     const player = playerRef.current;
                     if (player._customClickHandler && player._playerContainer) {
-                        player._playerContainer.removeEventListener('mousedown', player._customClickHandler, true);
-                        player._playerContainer.removeEventListener('touchstart', player._customClickHandler, true);
+                        player._playerContainer.removeEventListener('click', player._customClickHandler);
                     }
-                    if (player._customDblClickHandler && player._playerContainer) {
-                        player._playerContainer.removeEventListener('dblclick', player._customDblClickHandler, true);
+                    if (player._customTouchHandler && player._playerContainer) {
+                        player._playerContainer.removeEventListener('touchend', player._customTouchHandler);
                     }
                     player.destroy();
                 } catch (e) {
@@ -117,48 +116,44 @@ export const PlyrPlayer = forwardRef<PlyrPlayerHandle, PlyrPlayerProps>((props, 
                 const container = video.closest('.plyr') as HTMLElement;
                 if (container) {
                     let lastClickTime = 0;
-                    let lastTouchTime = 0;
+                    let lastTouchEndTime = 0;
                     let clickTimeout: any = null;
                     const DOUBLE_CLICK_DELAY = 300;
 
-                    const handleEvent = (e: any) => {
-                        // 1. Skip if clicking on controls or menus
-                        if (e.target.closest('.plyr__controls') || e.target.closest('.plyr__menu')) {
-                            return;
-                        }
+                    // Use 'click' so it fires AFTER mouseup — no conflict with Plyr internals.
+                    // clickToPlay:false means Plyr won't handle this event at all.
+                    const handleClick = (e: MouseEvent) => {
+                        if ((e.target as HTMLElement).closest('.plyr__controls') || (e.target as HTMLElement).closest('.plyr__menu')) return;
+                        // Ignore synthetic click fired right after touchend
+                        if (Date.now() - lastTouchEndTime < 500) return;
 
                         const now = Date.now();
-                        
-                        // 2. Deduplicate Touch/Mouse
-                        if (e.type === 'touchstart') {
-                            lastTouchTime = now;
-                        } else if (e.type === 'mousedown' && now - lastTouchTime < 500) {
-                            return;
-                        }
-
-                        // 3. Detect double click vs single click delay
                         if (now - lastClickTime < DOUBLE_CLICK_DELAY && now - lastClickTime > 0) {
-                            // Double-click detected!
-                            // Cancel the pending single-click action
-                            if (clickTimeout) {
-                                clearTimeout(clickTimeout);
-                                clickTimeout = null;
-                            }
-                            
-                            // Capture and stop so Plyr doesn't handle this event
-                            if (e.cancelable) e.preventDefault();
-                            e.stopPropagation();
+                            // Desktop double-click → fullscreen (YouTube behaviour)
+                            if (clickTimeout) { clearTimeout(clickTimeout); clickTimeout = null; }
+                            player.fullscreen.toggle();
+                            lastClickTime = 0;
+                        } else {
+                            lastClickTime = now;
+                            if (clickTimeout) clearTimeout(clickTimeout);
+                            clickTimeout = setTimeout(() => { player.togglePlay(); clickTimeout = null; }, DOUBLE_CLICK_DELAY);
+                        }
+                    };
 
-                            const rect = container.getBoundingClientRect();
-                            const clientX = 'clientX' in e ? e.clientX : e.touches?.[0]?.clientX;
-                            const clientY = 'clientY' in e ? e.clientY : e.touches?.[0]?.clientY;
+                    // Touch: use touchend so position is accurate and no ghost click conflict
+                    const handleTouchEnd = (e: TouchEvent) => {
+                        if ((e.target as HTMLElement).closest('.plyr__controls') || (e.target as HTMLElement).closest('.plyr__menu')) return;
+                        lastTouchEndTime = Date.now();
 
-                            if (clientX !== undefined) {
-                                const x = clientX - rect.left;
-                                const y = clientY - rect.top;
-                                const isLeftSide = x < rect.width / 2;
-
-                                if (isLeftSide) {
+                        const touch = e.changedTouches?.[0];
+                        const now = Date.now();
+                        if (now - lastClickTime < DOUBLE_CLICK_DELAY && now - lastClickTime > 0) {
+                            if (clickTimeout) { clearTimeout(clickTimeout); clickTimeout = null; }
+                            if (touch) {
+                                const rect = container.getBoundingClientRect();
+                                const x = touch.clientX - rect.left;
+                                const y = touch.clientY - rect.top;
+                                if (x < rect.width / 2) {
                                     player.rewind(10);
                                     showRipple(x, y, 'backward', container);
                                 } else {
@@ -166,38 +161,20 @@ export const PlyrPlayer = forwardRef<PlyrPlayerHandle, PlyrPlayerProps>((props, 
                                     showRipple(x, y, 'forward', container);
                                 }
                             }
-                            lastClickTime = 0; // Reset
+                            lastClickTime = 0;
                         } else {
-                            // Potentially a single click or the first of a double click
                             lastClickTime = now;
-                            
-                            // Clear any existing timeout (shouldn't be any but for safety)
                             if (clickTimeout) clearTimeout(clickTimeout);
-                            
-                            // Set a delay to trigger single-click pause/play only if no 2nd click follows
-                            clickTimeout = setTimeout(() => {
-                                player.togglePlay();
-                                clickTimeout = null;
-                            }, DOUBLE_CLICK_DELAY);
+                            clickTimeout = setTimeout(() => { player.togglePlay(); clickTimeout = null; }, DOUBLE_CLICK_DELAY);
                         }
                     };
 
-                    // We use the capture phase (true) to intercept the second click, 
-                    // but we let the first one through to Plyr.
-                    container.addEventListener('mousedown', handleEvent, true);
-                    container.addEventListener('touchstart', handleEvent, { capture: true, passive: false });
-
-                    // Explicitly block standard dblclick only on the video area
-                    const blockDblClick = (e: Event) => {
-                        if (!e.target || (e.target as HTMLElement).closest('.plyr__controls')) return;
-                        e.preventDefault();
-                        e.stopPropagation();
-                    };
-                    container.addEventListener('dblclick', blockDblClick, true);
+                    container.addEventListener('click', handleClick);
+                    container.addEventListener('touchend', handleTouchEnd, { passive: true });
 
                     // Store for cleanup
-                    (player as any)._customClickHandler = handleEvent;
-                    (player as any)._customDblClickHandler = blockDblClick;
+                    (player as any)._customClickHandler = handleClick;
+                    (player as any)._customTouchHandler = handleTouchEnd;
                     (player as any)._playerContainer = container;
                 }
             } catch (e) {

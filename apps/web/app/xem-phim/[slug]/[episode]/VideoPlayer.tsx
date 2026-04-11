@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useStore } from "@/lib/store/useStore";
 import { useProfileStore } from "@/lib/store/useProfileStore";
@@ -260,11 +261,35 @@ export default function VideoPlayer({
                     }
                     break;
                 case "ArrowDown":
-                    if (prevEpisodeSlug) { 
-                        e.preventDefault(); 
-                        router.push(`/xem-phim/${movieSlug}/${prevEpisodeSlug}${serverIndex !== undefined ? `?sv=${serverIndex}` : ''}`); 
+                    if (prevEpisodeSlug) {
+                        e.preventDefault();
+                        router.push(`/xem-phim/${movieSlug}/${prevEpisodeSlug}${serverIndex !== undefined ? `?sv=${serverIndex}` : ''}`);
                     }
                     break;
+                case "m":
+                    e.preventDefault();
+                    if (playerRef.current) playerRef.current.muted = !playerRef.current.muted;
+                    break;
+                case "f":
+                    e.preventDefault();
+                    if (playerRef.current) playerRef.current.fullscreen.toggle();
+                    break;
+                case "j":
+                    e.preventDefault();
+                    skipTime(-10);
+                    break;
+                case "l":
+                    e.preventDefault();
+                    skipTime(10);
+                    break;
+                default:
+                    if (/^[0-9]$/.test(e.key) && playerRef.current) {
+                        e.preventDefault();
+                        const dur = playerRef.current.duration;
+                        if (dur && !isNaN(dur)) {
+                            playerRef.current.currentTime = (parseInt(e.key) / 10) * dur;
+                        }
+                    }
             }
         };
         window.addEventListener("keydown", handleKeyDown);
@@ -328,6 +353,19 @@ export default function VideoPlayer({
                         </div>
                     </div>
                 ) : null}
+
+                {/* Next episode button — hiển thị khi hover, ẩn khi đang load */}
+                {!isCheckingSources && nextEpisodeSlug && (
+                    <div className={`absolute ${useEmbed ? 'bottom-4' : 'bottom-16'} right-4 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-200`}>
+                        <button
+                            onClick={() => router.push(`/xem-phim/${movieSlug}/${nextEpisodeSlug}${serverIndex !== undefined ? `?sv=${serverIndex}` : ''}`)}
+                            className="flex items-center gap-1.5 bg-black/70 hover:bg-black/90 backdrop-blur-sm text-white text-sm font-semibold px-4 py-2 rounded-xl border border-white/20 hover:border-white/40 transition-all shadow-xl"
+                        >
+                            Tập tiếp theo
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Controls bar — Redundancy options */}
