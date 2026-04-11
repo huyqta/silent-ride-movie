@@ -35,35 +35,24 @@ export const PlyrPlayer = forwardRef<PlyrPlayerHandle, PlyrPlayerProps>((props, 
         if (!videoRef.current) return;
 
         const video = videoRef.current;
-        
+
         const defaultOptions = {
             controls: [
-                'play',
-                'progress', 'current-time', 'duration', 'mute', 'volume',
-                'captions', 'settings', 'pip', 'airplay', 'fullscreen'
+                'play-large', 'play', 'rewind', 'fast-forward', 'progress',
+                'current-time', 'mute', 'volume',
+                'captions', 'settings',
+                'airplay', 'fullscreen'
             ],
             settings: ['quality', 'speed'],
-            tooltips: { controls: true, seek: true },
-            displayDuration: true,
-            invertTime: false,
-            toggleInvert: false,
-            clickToPlay: false,
-            blankVideo: 'https://cdn.plyr.io/static/blank.mp4', // Explicitly set or use an alternative
-            keyboard: { focused: true, global: true },
+            speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 4] },
+            quality: { default: 1080, options: [4320, 2880, 2160, 1440, 1080, 720, 576, 480, 360, 240] },
             ...options
         };
 
         const cleanup = () => {
             if (playerRef.current) {
                 try {
-                    const player = playerRef.current;
-                    if (player._customClickHandler && player._playerContainer) {
-                        player._playerContainer.removeEventListener('click', player._customClickHandler);
-                    }
-                    if (player._customTouchHandler && player._playerContainer) {
-                        player._playerContainer.removeEventListener('touchend', player._customTouchHandler);
-                    }
-                    player.destroy();
+                    playerRef.current.destroy();
                 } catch (e) {
                     console.error('Error destroying player:', e);
                 }
@@ -73,7 +62,6 @@ export const PlyrPlayer = forwardRef<PlyrPlayerHandle, PlyrPlayerProps>((props, 
                 hlsRef.current.destroy();
                 hlsRef.current = null;
             }
-            // Reset Plyr global + script tag → next mount always loads async (no synchronous init race)
             (window as any).Plyr = undefined;
             document.getElementById('plyr-cdn-script')?.remove();
         };
@@ -87,102 +75,30 @@ export const PlyrPlayer = forwardRef<PlyrPlayerHandle, PlyrPlayerProps>((props, 
                 playerRef.current = player;
 
                 if (hlsUrl && Hls.isSupported()) {
-                    // HLS.js manages the source directly — do NOT set player.source
-                    // or it causes a double video.load() that breaks play() on fast navigation.
-                    // startPosition tells HLS to buffer from that point immediately (no post-seek needed)
                     const hls = new Hls(startTime && startTime > 0 ? { startPosition: startTime } : {});
                     hlsRef.current = hls;
                     hls.loadSource(hlsUrl);
                     hls.attachMedia(video);
                     hls.on(Hls.Events.MANIFEST_PARSED, () => {
                         if (onReady) onReady(player);
-                        player.play().catch(() => {});
+                        player.play().catch(() => { });
                     });
                 } else if (hlsUrl && video.canPlayType('application/vnd.apple.mpegurl')) {
-                    // Safari native HLS
                     video.src = hlsUrl;
                     video.addEventListener('loadedmetadata', () => {
                         if (onReady) onReady(player);
                         if (startTime && startTime > 0) video.currentTime = startTime;
-                        player.play().catch(() => {});
+                        player.play().catch(() => { });
                     }, { once: true });
                 } else {
-                    // YouTube / embed / direct video source
                     if (source) player.source = source;
                     onReady && onReady(player);
-                }
-
-                // Add Double-click / Double-tap to seek (YouTube Style)
-                const container = video.closest('.plyr') as HTMLElement;
-                if (container) {
-                    let lastClickTime = 0;
-                    let lastTouchEndTime = 0;
-                    let clickTimeout: any = null;
-                    const DOUBLE_CLICK_DELAY = 300;
-
-                    // Use 'click' so it fires AFTER mouseup — no conflict with Plyr internals.
-                    // clickToPlay:false means Plyr won't handle this event at all.
-                    const handleClick = (e: MouseEvent) => {
-                        if ((e.target as HTMLElement).closest('.plyr__controls') || (e.target as HTMLElement).closest('.plyr__menu')) return;
-                        // Ignore synthetic click fired right after touchend
-                        if (Date.now() - lastTouchEndTime < 500) return;
-
-                        const now = Date.now();
-                        if (now - lastClickTime < DOUBLE_CLICK_DELAY && now - lastClickTime > 0) {
-                            // Desktop double-click → fullscreen (YouTube behaviour)
-                            if (clickTimeout) { clearTimeout(clickTimeout); clickTimeout = null; }
-                            player.fullscreen.toggle();
-                            lastClickTime = 0;
-                        } else {
-                            lastClickTime = now;
-                            if (clickTimeout) clearTimeout(clickTimeout);
-                            clickTimeout = setTimeout(() => { player.togglePlay(); clickTimeout = null; }, DOUBLE_CLICK_DELAY);
-                        }
-                    };
-
-                    // Touch: use touchend so position is accurate and no ghost click conflict
-                    const handleTouchEnd = (e: TouchEvent) => {
-                        if ((e.target as HTMLElement).closest('.plyr__controls') || (e.target as HTMLElement).closest('.plyr__menu')) return;
-                        lastTouchEndTime = Date.now();
-
-                        const touch = e.changedTouches?.[0];
-                        const now = Date.now();
-                        if (now - lastClickTime < DOUBLE_CLICK_DELAY && now - lastClickTime > 0) {
-                            if (clickTimeout) { clearTimeout(clickTimeout); clickTimeout = null; }
-                            if (touch) {
-                                const rect = container.getBoundingClientRect();
-                                const x = touch.clientX - rect.left;
-                                const y = touch.clientY - rect.top;
-                                if (x < rect.width / 2) {
-                                    player.rewind(10);
-                                    showRipple(x, y, 'backward', container);
-                                } else {
-                                    player.forward(10);
-                                    showRipple(x, y, 'forward', container);
-                                }
-                            }
-                            lastClickTime = 0;
-                        } else {
-                            lastClickTime = now;
-                            if (clickTimeout) clearTimeout(clickTimeout);
-                            clickTimeout = setTimeout(() => { player.togglePlay(); clickTimeout = null; }, DOUBLE_CLICK_DELAY);
-                        }
-                    };
-
-                    container.addEventListener('click', handleClick);
-                    container.addEventListener('touchend', handleTouchEnd, { passive: true });
-
-                    // Store for cleanup
-                    (player as any)._customClickHandler = handleClick;
-                    (player as any)._customTouchHandler = handleTouchEnd;
-                    (player as any)._playerContainer = container;
                 }
             } catch (e) {
                 console.error('Failed to init Plyr:', e);
             }
         };
 
-        // LOAD PLYR VIA CDN - This is the most compatible way for Turbopack/Next.js
         const loadAndInit = () => {
             if (window.Plyr) {
                 initPlayer(window.Plyr);
@@ -216,23 +132,34 @@ export const PlyrPlayer = forwardRef<PlyrPlayerHandle, PlyrPlayerProps>((props, 
         };
     }, [hlsUrl, JSON.stringify(source)]);
 
-    const showRipple = (x: number, y: number, type: 'forward' | 'backward', container: HTMLElement) => {
-        const ripple = document.createElement('div');
-        ripple.className = `touch-ripple ${type}`;
-        ripple.style.left = `${x}px`;
-        ripple.style.top = `${y}px`;
-        container.appendChild(ripple);
-        setTimeout(() => ripple.remove(), 600);
-    };
-
     useEffect(() => {
         const handleFullscreen = () => {
-            if (document.fullscreenElement && window.screen.orientation && (window as any).screen.orientation.lock) {
-                (window as any).screen.orientation.lock('landscape').catch(() => {});
+            try {
+                if (document.fullscreenElement) {
+                    // Lock to landscape when entering fullscreen
+                    if (window.screen && window.screen.orientation && (window.screen.orientation as any).lock) {
+                        (window.screen.orientation as any).lock('landscape').catch(() => {
+                            // Silently fail if not supported or denied
+                        });
+                    }
+                } else {
+                    // Unlock orientation when exiting fullscreen
+                    if (window.screen && window.screen.orientation && window.screen.orientation.unlock) {
+                        window.screen.orientation.unlock();
+                    }
+                }
+            } catch (err) {
+                console.warn('Orientation lock error:', err);
             }
         };
+
         document.addEventListener('fullscreenchange', handleFullscreen);
-        return () => document.removeEventListener('fullscreenchange', handleFullscreen);
+        document.addEventListener('webkitfullscreenchange', handleFullscreen);
+        
+        return () => {
+            document.removeEventListener('fullscreenchange', handleFullscreen);
+            document.removeEventListener('webkitfullscreenchange', handleFullscreen);
+        };
     }, []);
 
     return (
