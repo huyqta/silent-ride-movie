@@ -22,6 +22,10 @@ jobs:
 
       - name: Build for Cloudflare
         run: pnpm build:cloudflare
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_OPHIM_API_URL: ${{ secrets.NEXT_PUBLIC_OPHIM_API_URL }}
 
       - name: Deploy to Cloudflare Workers
         working-directory: apps/web
