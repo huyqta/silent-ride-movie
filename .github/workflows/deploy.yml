@@ -20,7 +20,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Build & Deploy to Cloudflare Workers
+      - name: Build for Cloudflare
+        run: pnpm build:cloudflare
+
+      - name: Deploy to Cloudflare Workers
         working-directory: apps/web
         run: pnpm run deploy
         env:
