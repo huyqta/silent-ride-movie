@@ -6,7 +6,11 @@
       "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\({k:v for k,v in d.items\\(\\) if ''''middleware'''' in k.lower\\(\\)}, indent=2\\)\\)\")",
       "Bash(python -c \"import json,sys; print\\(json.dumps\\(json.load\\(sys.stdin\\), indent=2\\)\\)\")",
       "Bash(python -c \"import json,sys; p=json.load\\(sys.stdin\\); print\\(p.get\\(''''engines'''', {}\\)\\)\")",
-      "Bash(chmod +x \"e:/10_WORKS/silent-ride-movie/.git/hooks/pre-push\")"
+      "Bash(chmod +x \"e:/10_WORKS/silent-ride-movie/.git/hooks/pre-push\")",
+      "WebSearch",
+      "mcp__plugin_context7_context7__resolve-library-id",
+      "mcp__plugin_context7_context7__query-docs",
+      "Bash(python -c \"import json,sys; p=json.load\\(sys.stdin\\); print\\(json.dumps\\(p[''''scripts''''], indent=2\\)\\)\")"
     ]
   }
 }
