@@ -4,7 +4,9 @@
       "Bash(pnpm build:cloudflare)",
       "Bash(pnpm install:*)",
       "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\({k:v for k,v in d.items\\(\\) if ''''middleware'''' in k.lower\\(\\)}, indent=2\\)\\)\")",
-      "Bash(python -c \"import json,sys; print\\(json.dumps\\(json.load\\(sys.stdin\\), indent=2\\)\\)\")"
+      "Bash(python -c \"import json,sys; print\\(json.dumps\\(json.load\\(sys.stdin\\), indent=2\\)\\)\")",
+      "Bash(python -c \"import json,sys; p=json.load\\(sys.stdin\\); print\\(p.get\\(''''engines'''', {}\\)\\)\")",
+      "Bash(chmod +x \"e:/10_WORKS/silent-ride-movie/.git/hooks/pre-push\")"
     ]
   }
 }
