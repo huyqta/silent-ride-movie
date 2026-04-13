@@ -6,10 +6,13 @@
     "dev": "turbo run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
-    "update-db": "echo 'Syncing types...'"
+    "update-db": "echo 'Syncing types...'",
+    "build:cloudflare": "pnpm build && pnpm --filter silent-ride run pages:build"
   },
   "devDependencies": {
-    "turbo": "^2.0.0"
+    "@opennextjs/cloudflare": "^1.19.1",
+    "turbo": "^2.0.0",
+    "vercel": "^51.1.0"
   },
   "engines": {
     "node": ">=18"
