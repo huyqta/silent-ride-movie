@@ -1,34 +1,29 @@
-import { Metadata } from "next";
-import { getMoviesByGenre } from "@/lib/api/unified";
+"use client";
 
-export const revalidate = 3600;
+import { use } from "react";
+import { getMoviesByGenre } from "@/lib/api/unified";
 import MovieGrid from "@/components/movie/MovieGrid";
 import Pagination from "@/components/ui/Pagination";
+import SplashScreen from "@/components/ui/SplashScreen";
+import { useMovieData } from "@/lib/hooks/use-movie-data";
 
 interface Props {
     params: Promise<{ slug: string }>;
     searchParams: Promise<{ page?: string }>;
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-    const { slug } = await params;
-    return {
-        title: `Thể loại: ${slug.replace(/-/g, " ")}`,
-        description: `Xem phim theo thể loại ${slug.replace(/-/g, " ")}`,
-    };
-}
-
-export default async function GenrePage({ params, searchParams }: Props) {
-    const { slug } = await params;
-    const { page } = await searchParams;
+export default function GenrePage({ params, searchParams }: Props) {
+    const { slug } = use(params);
+    const { page } = use(searchParams);
     const currentPage = parseInt(page || "1", 10);
 
-    let data;
-    try {
-        data = await getMoviesByGenre(slug, currentPage);
-    } catch (error) {
-        console.error("Failed to fetch movies:", error);
-        data = null;
+    const { data, loading } = useMovieData(
+        `genre-${slug}-p${currentPage}`,
+        () => getMoviesByGenre(slug, currentPage)
+    );
+
+    if (loading) {
+        return <SplashScreen />;
     }
 
     const movies = data?.data?.items || [];

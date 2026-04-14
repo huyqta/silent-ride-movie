@@ -1,34 +1,29 @@
-import { Metadata } from "next";
-import { getMoviesByCountry } from "@/lib/api/unified";
+"use client";
 
-export const revalidate = 3600;
+import { use } from "react";
+import { getMoviesByCountry } from "@/lib/api/unified";
 import MovieGrid from "@/components/movie/MovieGrid";
 import Pagination from "@/components/ui/Pagination";
+import SplashScreen from "@/components/ui/SplashScreen";
+import { useMovieData } from "@/lib/hooks/use-movie-data";
 
 interface Props {
     params: Promise<{ slug: string }>;
     searchParams: Promise<{ page?: string }>;
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-    const { slug } = await params;
-    return {
-        title: `Phim ${slug.replace(/-/g, " ")}`,
-        description: `Xem phim theo quốc gia ${slug.replace(/-/g, " ")}`,
-    };
-}
-
-export default async function CountryPage({ params, searchParams }: Props) {
-    const { slug } = await params;
-    const { page } = await searchParams;
+export default function CountryPage({ params, searchParams }: Props) {
+    const { slug } = use(params);
+    const { page } = use(searchParams);
     const currentPage = parseInt(page || "1", 10);
 
-    let data;
-    try {
-        data = await getMoviesByCountry(slug, currentPage);
-    } catch (error) {
-        console.error("Failed to fetch movies:", error);
-        data = null;
+    const { data, loading } = useMovieData(
+        `country-${slug}-p${currentPage}`,
+        () => getMoviesByCountry(slug, currentPage)
+    );
+
+    if (loading) {
+        return <SplashScreen />;
     }
 
     const movies = data?.data?.items || [];

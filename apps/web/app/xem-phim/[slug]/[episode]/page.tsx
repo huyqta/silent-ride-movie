@@ -1,65 +1,47 @@
-import { Metadata } from "next";
-import { notFound } from "next/navigation";
+"use client";
 
-export const revalidate = 3600;
+import { use } from "react";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import { ChevronRight, Home } from "lucide-react";
 import { getMovieDetail, getMoviePeoples, getMovieDetailNguonC, getMovieDetailPhimApi } from "@/lib/api/ophim";
 import VideoPlayer from "./VideoPlayer";
 import EpisodeSelector from "./EpisodeSelector";
 import MovieInfoDetails from "@/components/movie/MovieInfoDetails";
+import SplashScreen from "@/components/ui/SplashScreen";
+import { useMovieData } from "@/lib/hooks/use-movie-data";
 
 interface Props {
     params: Promise<{ slug: string; episode: string }>;
     searchParams: Promise<{ sv?: string }>;
 }
 
-export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
-    const { slug, episode } = await params;
-    const { sv } = await searchParams;
-    try {
-        const data = await getMovieDetail(slug);
-        const movie = data.movie;
-        const serverSuffix = sv ? ` - Server ${parseInt(sv) + 1}` : "";
-        return {
-            title: `${movie.name} - Tập ${episode}${serverSuffix}`,
-            description: `Xem ${movie.name} tập ${episode} - ${movie.origin_name}`,
-        };
-    } catch {
-        return {
-            title: "Xem phim",
-        };
-    }
-}
-
-export default async function WatchPage({ params, searchParams }: Props) {
-    const { slug, episode } = await params;
-    const { sv } = await searchParams;
+export default function WatchPage({ params, searchParams }: Props) {
+    const { slug, episode } = use(params);
+    const { sv } = use(searchParams);
     const requestedServerIndex = sv ? parseInt(sv) : undefined;
 
-    let data;
-    let peoplesData = null;
-    let nguonCData = null;
-    let phimApiData = null;
-
-    try {
-        [data, peoplesData, nguonCData, phimApiData] = await Promise.all([
+    const { data: watchData, loading } = useMovieData(`watch-${slug}`, async () => {
+        const [d, p, n, pa] = await Promise.all([
             getMovieDetail(slug),
-            getMoviePeoples(slug).catch(() => null), // Fallback if peoples API fails
-            getMovieDetailNguonC(slug).catch(() => null), // Fallback if NguonC API fails
-            getMovieDetailPhimApi(slug).catch(() => null) // Fallback if PhimApi API fails
+            getMoviePeoples(slug).catch(() => null),
+            getMovieDetailNguonC(slug).catch(() => null),
+            getMovieDetailPhimApi(slug).catch(() => null)
         ]);
-    } catch {
+        return { d, p, n, pa };
+    });
+
+    if (loading) {
+        return <SplashScreen />;
+    }
+
+    if (!watchData || !watchData.d || !watchData.d.movie) {
         notFound();
     }
 
-    if (!data || !data.movie) {
-        notFound();
-    }
-
-    const movie = data.movie;
-    const peoples = peoplesData?.data?.peoples || [];
-    const episodes = data.episodes || movie.episodes || [];
+    const movie = watchData.d.movie;
+    const peoples = watchData.p?.data?.peoples || [];
+    const episodes = watchData.d.episodes || movie.episodes || [];
 
     // Find current episode and server more efficiently
     let currentEpisode = null;
@@ -125,12 +107,10 @@ export default async function WatchPage({ params, searchParams }: Props) {
                     nextEpisodeSlug={nextEpisode?.slug}
                     serverIndex={currentServerIndex}
 
-                    nguonCData={nguonCData}
-                    phimApiData={phimApiData}
+                    nguonCData={watchData.n}
+                    phimApiData={watchData.pa}
                 />
             </div>
-
-
 
             {/* Episode selector */}
             <div className="container mx-auto px-4 py-6 border-t border-white/5">
@@ -153,4 +133,3 @@ export default async function WatchPage({ params, searchParams }: Props) {
         </div>
     );
 }
-

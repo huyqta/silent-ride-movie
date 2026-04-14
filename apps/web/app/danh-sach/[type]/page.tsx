@@ -1,10 +1,12 @@
-import { Metadata } from "next";
-import { notFound } from "next/navigation";
+"use client";
 
-export const revalidate = 3600;
+import { use } from "react";
+import { notFound } from "next/navigation";
 import { getMoviesByType } from "@/lib/api/unified";
 import MovieGrid from "@/components/movie/MovieGrid";
 import Pagination from "@/components/ui/Pagination";
+import SplashScreen from "@/components/ui/SplashScreen";
+import { useMovieData } from "@/lib/hooks/use-movie-data";
 
 const typeNames: Record<string, string> = {
     "phim-moi": "Phim Mới",
@@ -27,34 +29,24 @@ interface Props {
     searchParams: Promise<{ page?: string }>;
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-    const { type } = await params;
-    const typeName = typeNames[type] || "Danh sách phim";
-    return {
-        title: typeName,
-        description: `Xem ${typeName.toLowerCase()} mới nhất, chất lượng cao`,
-    };
-}
-
-export default async function MovieListPage({ params, searchParams }: Props) {
-    const { type } = await params;
-    const { page } = await searchParams;
+export default function MovieListPage({ params, searchParams }: Props) {
+    const { type } = use(params);
+    const { page } = use(searchParams);
     const currentPage = parseInt(page || "1", 10);
+
+    const { data, loading } = useMovieData(
+        `list-${type}-p${currentPage}`,
+        () => getMoviesByType(type, currentPage)
+    );
+
+    if (loading) {
+        return <SplashScreen />;
+    }
 
     if (!typeNames[type]) {
         notFound();
     }
 
-    let data;
-    try {
-        // All types use the same v1 API endpoint
-        data = await getMoviesByType(type, currentPage);
-    } catch (error) {
-        console.error("Failed to fetch movies:", error);
-        data = null;
-    }
-
-    // v1/api returns: { data: { items: [], params: { pagination: { ... } } } }
     const movies = data?.data?.items || [];
     const pagination = data?.data?.params?.pagination || {};
     const totalItems = pagination.totalItems || movies.length;

@@ -1,48 +1,30 @@
-import { Metadata } from "next";
-import Image from "next/image";
+"use client";
 
-export const revalidate = 3600;
+import { use } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Play, Heart, Share2, Calendar, Clock, Globe, Star, ChevronRight } from "lucide-react";
+import { Play, Calendar, Clock, Globe, Star } from "lucide-react";
 import { getMovieDetail, getImageUrl } from "@/lib/api/ophim";
-import MovieSlider from "@/components/movie/MovieSlider";
 import FavoriteButton from "./FavoriteButton";
 import EpisodeList from "./EpisodeList";
+import SplashScreen from "@/components/ui/SplashScreen";
+import { useMovieData } from "@/lib/hooks/use-movie-data";
 
 interface Props {
     params: Promise<{ slug: string }>;
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-    const { slug } = await params;
-    try {
-        const data = await getMovieDetail(slug);
-        const movie = data.movie;
-        return {
-            title: movie.name,
-            description: movie.content?.slice(0, 160) || `Xem phim ${movie.name} - ${movie.origin_name}`,
-            openGraph: {
-                title: movie.name,
-                description: movie.content?.slice(0, 160),
-                images: [getImageUrl(movie.poster_url || movie.thumb_url)],
-            },
-        };
-    } catch {
-        return {
-            title: "Không tìm thấy phim",
-        };
-    }
-}
+export default function MovieDetailPage({ params }: Props) {
+    const { slug } = use(params);
+    
+    const { data, loading } = useMovieData(
+        `movie-detail-${slug}`,
+        () => getMovieDetail(slug)
+    );
 
-export default async function MovieDetailPage({ params }: Props) {
-    const { slug } = await params;
-
-    let data;
-    try {
-        data = await getMovieDetail(slug);
-    } catch {
-        notFound();
+    if (loading) {
+        return <SplashScreen />;
     }
 
     if (!data || !data.movie) {

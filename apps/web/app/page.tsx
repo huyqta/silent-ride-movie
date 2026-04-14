@@ -1,12 +1,14 @@
-export const revalidate = 3600;
+"use client";
 
 import HeroBanner from "@/components/movie/HeroBanner";
 import MovieSlider from "@/components/movie/MovieSlider";
 import { HeroSkeleton } from "@/components/ui/Skeleton";
 import { getNewlyUpdatedMovies, getMoviesByType } from "@/lib/api/unified";
+import { useMovieData } from "@/lib/hooks/use-movie-data";
+import SplashScreen from "@/components/ui/SplashScreen";
 
-async function getHomeData() {
-  try {
+export default function HomePage() {
+  const { data, loading } = useMovieData("home-data", async () => {
     const [
       newMovies,
       singleMovies,
@@ -52,31 +54,15 @@ async function getHomeData() {
       subteam: subteam?.data?.items || [],
       chieuRap: chieuRap?.data?.items || [],
     };
-  } catch (error) {
-    console.error("Failed to fetch home data:", error);
-    return {
-      newMovies: [],
-      singleMovies: [],
-      seriesMovies: [],
-      animeMovies: [],
-      tvShows: [],
-      vietsubMovies: [],
-      thuyetMinhMovies: [],
-      longTiengMovies: [],
-      boDangChieu: [],
-      boHoanThanh: [],
-      sapChieu: [],
-      subteam: [],
-      chieuRap: [],
-    };
+  });
+
+  if (loading && !data) {
+    return <SplashScreen />;
   }
-}
 
-export default async function HomePage() {
-  const data = await getHomeData();
+  if (!data) return null;
+
   const { newMovies } = data;
-
-  // Use first movie with poster for hero
   const heroMovie = newMovies[0];
 
   const sections = [
