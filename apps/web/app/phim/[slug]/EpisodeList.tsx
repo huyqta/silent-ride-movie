@@ -48,6 +48,7 @@ export default function EpisodeList({ episodes, movieSlug }: EpisodeListProps) {
                         <Link
                             key={ep.slug}
                             href={`/xem-phim/${movieSlug}/${ep.slug}?sv=${activeServer}`}
+                            prefetch={false}
                             className={`relative px-3 py-2 text-center text-sm font-medium rounded-lg transition-colors ${isWatching
                                     ? "bg-primary text-white ring-2 ring-primary ring-offset-2 ring-offset-background"
                                     : "bg-white/10 hover:bg-white/20 text-foreground-secondary hover:text-white"

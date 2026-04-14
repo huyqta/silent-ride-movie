@@ -105,6 +105,7 @@ export default function MovieInfoDetails({ movie, peoples = [] }: MovieInfoDetai
                                     <Link
                                         key={cat.slug}
                                         href={`/the-loai/${cat.slug}`}
+                                        prefetch={false}
                                         className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-[10px] font-bold text-foreground-secondary hover:text-white rounded-lg transition-all border border-white/10"
                                     >
                                         #{cat.slug}

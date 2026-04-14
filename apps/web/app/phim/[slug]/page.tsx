@@ -118,6 +118,7 @@ export default function MovieDetailPage({ params }: Props) {
                                     <Link
                                         key={cat.slug}
                                         href={`/the-loai/${cat.slug}`}
+                                        prefetch={false}
                                         className="px-3 py-1 bg-white/10 hover:bg-white/20 text-sm rounded-full transition-colors"
                                     >
                                         {cat.name}
@@ -131,6 +132,7 @@ export default function MovieDetailPage({ params }: Props) {
                             {episodes.length > 0 && episodes[0]?.server_data?.length > 0 && (
                                 <Link
                                     href={`/xem-phim/${movie.slug}/${episodes[0].server_data[0].slug}`}
+                                    prefetch={false}
                                     className="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-colors shadow-lg shadow-primary/30"
                                 >
                                     <Play className="w-5 h-5" fill="white" />

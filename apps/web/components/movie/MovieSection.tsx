@@ -20,7 +20,8 @@ export default function MovieSection({ title, movies, href, showProgress = true 
                 {href && (
                     <Link
                         href={href}
-                        className="flex items-center gap-1 text-sm text-foreground-secondary hover:text-primary transition-colors"
+                        prefetch={false}
+                        className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:text-primary-hover transition-colors group"
                     >
                         Xem tất cả
                         <ChevronRight className="w-4 h-4" />

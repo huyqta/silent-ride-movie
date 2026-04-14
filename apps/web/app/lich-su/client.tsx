@@ -116,6 +116,7 @@ export default function HistoryClient({ initialHistory }: { initialHistory: Hist
                 {/* Thumbnail */}
                 <Link
                   href={`/xem-phim/${item.movie_slug}/${item.episode_slug}${item.playback_time > 0 ? `?t=${item.playback_time}` : ''}`}
+                  prefetch={false}
                   className="relative flex-shrink-0 w-32 md:w-40 aspect-video rounded-xl overflow-hidden bg-background-secondary"
                 >
                   {item.poster_url ? (
@@ -147,6 +148,7 @@ export default function HistoryClient({ initialHistory }: { initialHistory: Hist
                 <div className="flex-1 min-w-0">
                   <Link
                     href={`/phim/${item.movie_slug}`}
+                    prefetch={false}
                     className="font-semibold hover:text-blue-400 transition-colors line-clamp-1"
                   >
                     {item.movie_title}
@@ -164,6 +166,7 @@ export default function HistoryClient({ initialHistory }: { initialHistory: Hist
                 <div className="flex items-center gap-2">
                   <Link
                     href={`/xem-phim/${item.movie_slug}/${item.episode_slug}${item.playback_time > 0 ? `?t=${item.playback_time}` : ''}`}
+                    prefetch={false}
                     className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors hidden md:block"
                   >
                     Tiếp tục xem
@@ -181,6 +184,7 @@ export default function HistoryClient({ initialHistory }: { initialHistory: Hist
           </p>
           <Link
             href="/"
+            prefetch={false}
             className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
           >
             Khám phá phim

@@ -97,6 +97,7 @@ export default function FavoritesClient({ initialFavorites }: { initialFavorites
                     </p>
                     <Link
                         href="/"
+                        prefetch={false}
                         className="inline-flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg transition-colors"
                     >
                         Khám phá phim
