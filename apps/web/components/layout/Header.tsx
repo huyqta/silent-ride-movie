@@ -64,9 +64,11 @@ export default function Header() {
     const querySource = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('source') : null;
     const pathname = usePathname();
 
-    const { currentProfile, setProfile } = useProfileStore();
-    const { movieSource, setMovieSource } = useStore();
-    const { favoriteSlugs, watchHistory } = useProfileStore();
+    const currentProfile = useProfileStore(state => state.currentProfile);
+    const movieSource = useStore(state => state.movieSource);
+    const setMovieSource = useStore(state => state.setMovieSource);
+    const favoriteSlugs = useProfileStore(state => state.favoriteSlugs);
+    const watchHistory = useProfileStore(state => state.watchHistory);
 
     const [genres, setGenres] = useState<any[]>([]);
     const [countries, setCountries] = useState<any[]>([]);

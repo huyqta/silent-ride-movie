@@ -43,6 +43,8 @@ export default function VideoPlayer({
     const searchParams = useSearchParams();
     const initialTime = searchParams.get('t') ? Math.floor(Number(searchParams.get('t'))) : undefined;
     const playerRef = useRef<any>(null);
+    const pauseTimerRef = useRef<NodeJS.Timeout | null>(null);
+
     const { updateProgress, addToHistory } = useStore();
     const { currentProfile, updateWatchProgress } = useProfileStore();
     const [isLoading, setIsLoading] = useState(false);
@@ -168,9 +170,53 @@ export default function VideoPlayer({
         });
     }, [movieSlug, movieName, movieThumb, episode, episodeName, addToHistory]);
 
-    // Save progress every 10 seconds while playing
+    // ─── OPTIMIZED SYNC STRATEGY ───
+    const syncToServer = useCallback(async () => {
+        if (!playerRef.current || !currentProfile?.id) return;
+
+        const currentTime = Math.floor(playerRef.current.currentTime || 0);
+        const duration = Math.floor(playerRef.current.duration || 0);
+
+        if (duration > 0 && currentTime > 0) {
+            try {
+                const { updateWatchHistory } = await import('@/app/lich-su/actions');
+                await updateWatchHistory(currentProfile.id, {
+                    movie_slug: movieSlug,
+                    movie_title: movieName,
+                    poster_url: movieThumb,
+                    episode_slug: episode,
+                    episode_name: episodeName,
+                    duration,
+                    playback_time: currentTime,
+                });
+                console.log("🎬 DB Progress Synced");
+            } catch (err) {
+                console.error('Failed to sync history:', err);
+            }
+        }
+    }, [currentProfile?.id, movieSlug, movieName, movieThumb, episode, episodeName]);
+
+    // Handle sync on navigation or tab close
     useEffect(() => {
-        const saveInterval = setInterval(async () => {
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'hidden') {
+                syncToServer();
+            }
+        };
+
+        window.addEventListener("visibilitychange", handleVisibilityChange);
+        return () => {
+            syncToServer(); // Sync on internal unmount
+            window.removeEventListener("visibilitychange", handleVisibilityChange);
+            if (pauseTimerRef.current) {
+                clearTimeout(pauseTimerRef.current);
+            }
+        };
+    }, [syncToServer]);
+
+    // Save to LocalStorage every 10s (0 server requests)
+    useEffect(() => {
+        const saveInterval = setInterval(() => {
             if (playerRef.current && !playerRef.current.paused) {
                 const currentTime = Math.floor(playerRef.current.currentTime || 0);
                 const duration = Math.floor(playerRef.current.duration || 0);
@@ -178,29 +224,12 @@ export default function VideoPlayer({
                 if (duration > 0 && currentTime > 0) {
                     updateWatchProgress(movieSlug, { episode, episodeName, currentTime, duration, updatedAt: Date.now() });
                     updateProgress(movieSlug, episode, episodeName, currentTime, duration);
-
-                    if (currentProfile?.id) {
-                        try {
-                            const { updateWatchHistory } = await import('@/app/lich-su/actions');
-                            await updateWatchHistory(currentProfile.id, {
-                                movie_slug: movieSlug,
-                                movie_title: movieName,
-                                poster_url: movieThumb,
-                                episode_slug: episode,
-                                episode_name: episodeName,
-                                duration,
-                                playback_time: currentTime,
-                            });
-                        } catch (err) {
-                            console.error('Failed to sync history:', err);
-                        }
-                    }
                 }
             }
         }, 10000);
 
         return () => clearInterval(saveInterval);
-    }, [movieSlug, movieName, episode, episodeName, updateProgress, currentProfile, movieThumb, updateWatchProgress]);
+    }, [movieSlug, episode, episodeName, updateProgress, updateWatchProgress]);
 
     const togglePlay = useCallback(() => {
         playerRef.current?.togglePlay();
@@ -215,6 +244,21 @@ export default function VideoPlayer({
     // Called by PlyrPlayer once Plyr + HLS are ready
     const handlePlayerReady = (player: any) => {
         playerRef.current = player;
+
+        // Bắt sự kiện sync sau 5s pause
+        player.media.addEventListener('pause', () => {
+            pauseTimerRef.current = setTimeout(() => {
+                syncToServer();
+            }, 5000);
+        });
+
+        player.media.addEventListener('play', () => {
+            if (pauseTimerRef.current) {
+                clearTimeout(pauseTimerRef.current);
+                pauseTimerRef.current = null;
+            }
+        });
+
         // Show overlay only during actual mid-playback buffering, not initial load
         player.media.addEventListener('waiting', () => setIsLoading(true));
         player.media.addEventListener('playing', () => setIsLoading(false));
