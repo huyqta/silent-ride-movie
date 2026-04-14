@@ -89,6 +89,7 @@ export default function Pagination({ currentPage, totalPages, baseUrl }: Paginat
             {_currentPage > 1 ? (
                 <Link
                     href={getPageUrl(_currentPage - 1)}
+                    prefetch={false}
                     className="flex items-center gap-1 px-3 py-2 text-sm text-foreground-secondary hover:text-white hover:bg-white/5 rounded-lg transition-colors"
                 >
                     <ChevronLeft className="w-4 h-4" />
@@ -108,6 +109,7 @@ export default function Pagination({ currentPage, totalPages, baseUrl }: Paginat
                         <Link
                             key={index}
                             href={getPageUrl(page)}
+                            prefetch={false}
                             className={`min-w-[40px] h-10 flex items-center justify-center text-sm rounded-lg transition-colors ${page === _currentPage
                                 ? "bg-primary text-white font-medium"
                                 : "text-foreground-secondary hover:text-white hover:bg-white/5"
@@ -127,6 +129,7 @@ export default function Pagination({ currentPage, totalPages, baseUrl }: Paginat
             {_currentPage < _totalPages ? (
                 <Link
                     href={getPageUrl(_currentPage + 1)}
+                    prefetch={false}
                     className="flex items-center gap-1 px-3 py-2 text-sm text-foreground-secondary hover:text-white hover:bg-white/5 rounded-lg transition-colors"
                 >
                     <span className="hidden sm:inline">Sau</span>

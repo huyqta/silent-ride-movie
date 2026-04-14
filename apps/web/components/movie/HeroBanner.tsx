@@ -76,6 +76,7 @@ export default function HeroBanner({ movie }: HeroBannerProps) {
                                     <Link
                                         key={cat.slug}
                                         href={`/the-loai/${cat.slug}`}
+                                        prefetch={false}
                                         className="px-3 py-1 bg-white/10 hover:bg-white/20 text-sm rounded-full transition-colors"
                                     >
                                         {cat.name}
@@ -89,6 +90,7 @@ export default function HeroBanner({ movie }: HeroBannerProps) {
                             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                                 <Link
                                     href={`/phim/${movie.slug}`}
+                                    prefetch={false}
                                     className="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-colors shadow-lg shadow-primary/30"
                                 >
                                     <Play className="w-5 h-5" fill="white" />
@@ -98,6 +100,7 @@ export default function HeroBanner({ movie }: HeroBannerProps) {
                             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                                 <Link
                                     href={`/phim/${movie.slug}`}
+                                    prefetch={false}
                                     className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-lg transition-colors"
                                 >
                                     <Info className="w-5 h-5" />

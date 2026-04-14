@@ -178,7 +178,7 @@ export default function Header() {
                 <div className="container mx-auto px-4">
                     <div className="flex items-center justify-between h-16 md:h-20">
                         {/* Logo */}
-                        <Link href="/" className="flex items-center gap-3 group">
+                        <Link href="/" prefetch={false} className="flex items-center gap-3 group">
                             <motion.div
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
@@ -216,6 +216,7 @@ export default function Header() {
                                 <Link
                                     key={item.href}
                                     href={item.href}
+                                    prefetch={false}
                                     className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-foreground-secondary hover:text-white transition-colors rounded-lg hover:bg-white/5"
                                 >
                                     <item.icon className="w-4 h-4" />
@@ -245,14 +246,15 @@ export default function Header() {
                                         >
                                             <div className="grid grid-cols-3 gap-1 max-h-[60vh] overflow-y-auto scrollbar-hide">
                                                 {genres.map((genre) => (
-                                                    <Link
-                                                        key={genre.slug}
-                                                        href={`/the-loai/${genre.slug}`}
-                                                        onClick={() => setActiveMenu(null)}
-                                                        className="px-3 py-2 text-xs text-foreground-secondary hover:text-primary hover:bg-white/5 rounded-lg transition-colors"
-                                                    >
-                                                        {genre.name}
-                                                    </Link>
+                                    <Link
+                                        key={genre.slug}
+                                        href={`/the-loai/${genre.slug}`}
+                                        prefetch={false}
+                                        onClick={() => setActiveMenu(null)}
+                                        className="px-3 py-2 text-xs text-foreground-secondary hover:text-primary hover:bg-white/5 rounded-lg transition-colors"
+                                    >
+                                        {genre.name}
+                                    </Link>
                                                 ))}
                                             </div>
                                         </motion.div>
@@ -285,6 +287,7 @@ export default function Header() {
                                                     <Link
                                                         key={country.slug}
                                                         href={`/quoc-gia/${country.slug}`}
+                                                        prefetch={false}
                                                         onClick={() => setActiveMenu(null)}
                                                         className="px-3 py-2 text-xs text-foreground-secondary hover:text-primary hover:bg-white/5 rounded-lg transition-colors"
                                                     >
@@ -323,6 +326,7 @@ export default function Header() {
                                                     <Link
                                                         key={item.href}
                                                         href={item.href}
+                                                        prefetch={false}
                                                         onClick={() => setActiveMenu(null)}
                                                         className="flex items-center gap-3 px-4 py-3 text-sm text-foreground-secondary hover:text-white hover:bg-white/5 rounded-lg transition-colors group/item"
                                                     >
@@ -403,6 +407,7 @@ export default function Header() {
                             {/* Favorites Link */}
                             <Link
                                 href="/yeu-thich"
+                                prefetch={false}
                                 className="hidden md:flex items-center gap-1 p-2 text-foreground-secondary hover:text-white transition-colors rounded-lg hover:bg-white/5 relative"
                             >
                                 <Heart className="w-5 h-5" />
@@ -416,6 +421,7 @@ export default function Header() {
                             {/* History Link */}
                             <Link
                                 href="/lich-su"
+                                prefetch={false}
                                 className="hidden md:flex items-center gap-1 p-2 text-foreground-secondary hover:text-white transition-colors rounded-lg hover:bg-white/5 relative"
                             >
                                 <History className="w-5 h-5" />

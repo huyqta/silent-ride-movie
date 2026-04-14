@@ -60,7 +60,7 @@ export default function MovieCard({ movie, index = 0, showProgress = true }: Mov
             transition={{ duration: 0.3, delay: index * 0.05 }}
             className="group relative"
         >
-            <Link href={`/phim/${movie.slug}`} className="block">
+            <Link href={`/phim/${movie.slug}`} prefetch={false} className="block">
                 <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-background-secondary">
                     {/* Thumbnail */}
                     <Image
