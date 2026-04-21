@@ -107,5 +107,5 @@ export async function getFavoriteSlugs(profileId: string) {
     .select('movie_slug')
     .eq('profile_id', profileId)
 
-  return data?.map(f => f.movie_slug) || []
+  return data?.map((f: any) => f.movie_slug) || []
 }

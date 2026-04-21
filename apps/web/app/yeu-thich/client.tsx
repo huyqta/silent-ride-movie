@@ -24,7 +24,7 @@ export default function FavoritesClient({ initialFavorites }: { initialFavorites
     useEffect(() => {
         if (currentProfile?.id) {
             getFavorites(currentProfile.id).then(data => {
-                setFavorites(data.map(f => ({
+                setFavorites(data.map((f: any) => ({
                     movie_slug: f.movie_slug,
                     movie_title: f.movie_title,
                     poster_url: f.poster_url
