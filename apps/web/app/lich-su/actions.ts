@@ -1,6 +1,6 @@
 'use server'
 
-import { createServerSupabaseClient } from '@repo/database'
+import { createServerDataSupabaseClient } from '@repo/database'
 import { revalidatePath } from 'next/cache'
 import { watchHistorySchema, type WatchHistoryInput } from './schema'
 
@@ -15,7 +15,7 @@ export async function updateWatchHistory(profileId: string, historyData: WatchHi
   }
   
   const data = validated.data
-  const supabase = await createServerSupabaseClient()
+  const supabase = createServerDataSupabaseClient()
   if (!supabase) return
 
   // Verify profile exists
@@ -50,7 +50,7 @@ export async function updateWatchHistory(profileId: string, historyData: WatchHi
 
 export async function getWatchHistory(profileId: string) {
   if (!profileId) return []
-  const supabase = await createServerSupabaseClient()
+  const supabase = createServerDataSupabaseClient()
   if (!supabase) return []
 
   const { data } = await supabase
@@ -64,7 +64,7 @@ export async function getWatchHistory(profileId: string) {
 
 export async function clearHistory(profileId: string) {
     if (!profileId) return { error: 'Vui lòng chọn Profile' }
-    const supabase = await createServerSupabaseClient()
+    const supabase = createServerDataSupabaseClient()
     if (!supabase) return { error: 'Database not configured' }
   
     const { error } = await supabase

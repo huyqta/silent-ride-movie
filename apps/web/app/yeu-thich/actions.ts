@@ -1,6 +1,6 @@
 'use server'
 
-import { createServerSupabaseClient } from '@repo/database'
+import { createServerDataSupabaseClient } from '@repo/database'
 import { revalidatePath } from 'next/cache'
 
 import { favoriteSchema, type FavoriteInput } from './schema'
@@ -15,7 +15,7 @@ export async function toggleFavorite(profileId: string, movieData: FavoriteInput
     return { error: 'Dữ liệu phim không hợp lệ' }
   }
   
-  const supabase = await createServerSupabaseClient()
+  const supabase = createServerDataSupabaseClient()
   if (!supabase) return { error: 'Database not configured' }
 
   // Verify profile exists
@@ -73,7 +73,7 @@ export async function toggleFavorite(profileId: string, movieData: FavoriteInput
 
 export async function clearAllFavorites(profileId: string) {
   if (!profileId) return { error: 'Vui lòng chọn Profile' }
-  const supabase = await createServerSupabaseClient()
+  const supabase = createServerDataSupabaseClient()
   if (!supabase) return { error: 'Database not configured' }
 
   const { error } = await supabase
@@ -89,7 +89,7 @@ export async function clearAllFavorites(profileId: string) {
 
 export async function getFavorites(profileId: string) {
     if (!profileId) return []
-    const supabase = await createServerSupabaseClient()
+    const supabase = createServerDataSupabaseClient()
     if (!supabase) return []
 
     const { data } = await supabase
@@ -103,7 +103,7 @@ export async function getFavorites(profileId: string) {
 
 export async function getFavoriteSlugs(profileId: string) {
   if (!profileId) return []
-  const supabase = await createServerSupabaseClient()
+  const supabase = createServerDataSupabaseClient()
   if (!supabase) return []
 
   const { data } = await supabase

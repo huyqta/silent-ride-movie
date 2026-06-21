@@ -1,12 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, User, Loader2, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
 import { useProfileStore, type Profile } from '@/lib/store/useProfileStore'
-import { createProfile, deleteProfile } from './actions'
+import { createProfile, deleteProfile, getProfiles } from './actions'
 
 export default function ProfilesClient({ initialProfiles }: { initialProfiles: Profile[] }) {
   const [profiles, setProfiles] = useState(initialProfiles)
@@ -14,6 +13,29 @@ export default function ProfilesClient({ initialProfiles }: { initialProfiles: P
   const [newName, setNewName] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [isManaging, setIsManaging] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+
+    const syncProfiles = async () => {
+      const latestProfiles = await getProfiles()
+      if (!cancelled && latestProfiles.length > 0) {
+        setProfiles(latestProfiles as Profile[])
+      }
+    }
+
+    void syncProfiles()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
   
   const { setProfile } = useProfileStore()
   const router = useRouter()
@@ -29,11 +51,14 @@ export default function ProfilesClient({ initialProfiles }: { initialProfiles: P
     if (!newName.trim() || isLoading) return
     
     setIsLoading(true)
+    setErrorMessage('')
     const result = await createProfile(newName)
     if (result.success && result.data) {
-      setProfiles([...profiles, result.data as Profile])
+      setProfiles((currentProfiles) => [...currentProfiles, result.data as Profile])
       setNewName('')
       setIsCreating(false)
+    } else if (result.error) {
+      setErrorMessage(result.error)
     }
     setIsLoading(false)
   }
@@ -43,9 +68,12 @@ export default function ProfilesClient({ initialProfiles }: { initialProfiles: P
     if (isLoading) return
     
     setIsLoading(true)
+    setErrorMessage('')
     const result = await deleteProfile(id)
     if (result.success) {
-      setProfiles(profiles.filter(p => p.id !== id))
+      setProfiles((currentProfiles) => currentProfiles.filter((profile) => profile.id !== id))
+    } else if (result.error) {
+      setErrorMessage(result.error)
     }
     setIsLoading(false)
   }
@@ -55,7 +83,7 @@ export default function ProfilesClient({ initialProfiles }: { initialProfiles: P
       <div className="w-full max-w-4xl">
         <div className="text-center mb-12">
           <motion.h1 
-            initial={{ opacity: 0, y: -20 }}
+            initial={isMounted ? { opacity: 0, y: -20 } : false}
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl md:text-5xl font-bold text-white mb-4"
           >
@@ -69,7 +97,7 @@ export default function ProfilesClient({ initialProfiles }: { initialProfiles: P
             {profiles.map((profile, index) => (
               <motion.div
                 key={profile.id}
-                initial={{ opacity: 0, scale: 0.8 }}
+                initial={isMounted ? { opacity: 0, scale: 0.8 } : false}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ delay: index * 0.1 }}
@@ -106,7 +134,7 @@ export default function ProfilesClient({ initialProfiles }: { initialProfiles: P
 
             {!isCreating ? (
               <motion.div
-                initial={{ opacity: 0 }}
+                initial={isMounted ? { opacity: 0 } : false}
                 animate={{ opacity: 1 }}
                 onClick={() => setIsCreating(true)}
                 className="flex flex-col items-center gap-4 cursor-pointer group"
@@ -134,6 +162,11 @@ export default function ProfilesClient({ initialProfiles }: { initialProfiles: P
                     placeholder="Tên của bạn"
                     className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 text-white mb-6 focus:outline-none focus:ring-2 focus:ring-white/20"
                   />
+                  {errorMessage ? (
+                    <p className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                      {errorMessage}
+                    </p>
+                  ) : null}
                   <div className="flex gap-3">
                     <button
                       type="button"

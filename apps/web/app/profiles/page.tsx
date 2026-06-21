@@ -1,6 +1,8 @@
 import ProfilesClient from './client'
 import { getProfiles } from './actions'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = {
   title: 'Ai đang xem? | Silent Ride Movie',
   description: 'Chọn profile của bạn để tiếp tục',

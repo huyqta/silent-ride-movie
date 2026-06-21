@@ -1,10 +1,14 @@
 'use server'
 
-import { createServerSupabaseClient } from '@repo/database'
+import {
+  buildProfileAvatarUrl,
+  createServerDataSupabaseClient,
+  normalizeProfileName,
+} from '@repo/database'
 import { revalidatePath } from 'next/cache'
 
 export async function getProfiles() {
-  const supabase = await createServerSupabaseClient()
+  const supabase = createServerDataSupabaseClient()
   if (!supabase) return []
   const { data, error } = await supabase
     .from('sr_profiles')
@@ -20,13 +24,18 @@ export async function getProfiles() {
 }
 
 export async function createProfile(fullName: string, avatarUrl?: string) {
-  const supabase = await createServerSupabaseClient()
+  const normalizedFullName = normalizeProfileName(fullName)
+  if (!normalizedFullName) {
+    return { error: 'Vui lòng nhập tên profile' }
+  }
+
+  const supabase = createServerDataSupabaseClient()
   if (!supabase) return { error: 'Database not configured' }
   const { data, error } = await supabase
     .from('sr_profiles')
     .insert({
-      full_name: fullName,
-      avatar_url: avatarUrl || `https://api.dicebear.com/7.x/pixel-art/svg?seed=${fullName}`,
+      full_name: normalizedFullName,
+      avatar_url: avatarUrl || buildProfileAvatarUrl(normalizedFullName),
     })
     .select()
     .single()
@@ -40,7 +49,7 @@ export async function createProfile(fullName: string, avatarUrl?: string) {
 }
 
 export async function deleteProfile(id: string) {
-    const supabase = await createServerSupabaseClient()
+    const supabase = createServerDataSupabaseClient()
     if (!supabase) return { error: 'Database not configured' }
     const { error } = await supabase
       .from('sr_profiles')

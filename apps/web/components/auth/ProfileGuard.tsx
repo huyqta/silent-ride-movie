@@ -47,23 +47,21 @@ export default function ProfileGuard({ children }: { children: React.ReactNode }
     }
   }, [currentProfile?.id, setFavoriteSlugs, setWatchHistory, setWatchProgress])
 
+  // Only redirect after mount (client-side only), never on /profiles page
   useEffect(() => {
     if (isSupabaseEnabled && mounted && !currentProfile && pathname !== '/profiles') {
       router.push('/profiles')
     }
   }, [isSupabaseEnabled, currentProfile, pathname, router, mounted])
 
-  // Prevent hydration mismatch
-  if (!mounted) return null
-
   // If no Supabase, bypass completely
   if (!isSupabaseEnabled) return <>{children}</>
 
-  // If we are on profiles page, or we have a profile, render children
-  if (pathname === '/profiles' || currentProfile) {
-    return <>{children}</>
+  // Before mount: always render children to match server HTML (avoid hydration mismatch)
+  // After mount: hide content while redirecting (not on /profiles page)
+  if (mounted && !currentProfile && pathname !== '/profiles') {
+    return null
   }
 
-  // Otherwise return null while redirecting
-  return null
+  return <>{children}</>
 }
