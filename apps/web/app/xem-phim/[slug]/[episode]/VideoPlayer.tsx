@@ -173,6 +173,8 @@ export default function VideoPlayer({
     // ─── OPTIMIZED SYNC STRATEGY ───
     const syncToServer = useCallback(async () => {
         if (!playerRef.current || !currentProfile?.id) return;
+        const isSupabaseEnabled = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+        if (!isSupabaseEnabled) return;
 
         const currentTime = Math.floor(playerRef.current.currentTime || 0);
         const duration = Math.floor(playerRef.current.duration || 0);

@@ -1,16 +1,18 @@
 # Silent Ride Movie
 
-Ứng dụng xem phim trực tuyến miễn phí, xây dựng bằng Next.js 16 + Supabase. Hỗ trợ đa nguồn phim (OPhim, NguonC, KKPhim), quản lý hồ sơ người dùng (không cần đăng nhập), danh sách yêu thích, lịch sử xem phim và tìm kiếm nâng cao.
+Ứng dụng xem phim trực tuyến miễn phí, xây dựng bằng Next.js 16 + Supabase (Optional). Hỗ trợ đa nguồn phim (OPhim, NguonC, KKPhim), quản lý hồ sơ người dùng (không cần đăng nhập), danh sách yêu thích, lịch sử xem phim và tìm kiếm nâng cao.
 
 ## Tính năng
 
 - Xem phim từ 3 nguồn: **OPhim**, **NguonC**, **KKPhim** — có thể chuyển đổi nguồn tùy ý
 - Video player hỗ trợ HLS với tự động chọn luồng dự phòng khi link lỗi
-- Quản lý nhiều hồ sơ (profiles) trong gia đình — không yêu cầu đăng nhập
-- Yêu thích phim & lịch sử xem có ghi nhớ tiến độ
+- **(Tuỳ chọn)** Quản lý nhiều hồ sơ (profiles) trong gia đình — không yêu cầu đăng nhập
+- **(Tuỳ chọn)** Yêu thích phim & lịch sử xem có ghi nhớ tiến độ
 - Tìm kiếm thường và tìm kiếm nâng cao (thể loại, quốc gia, năm...)
 - Giao diện responsive, hỗ trợ mobile
 - Theme màu động theo nguồn phim đang chọn
+
+> **Lưu ý**: Nếu bạn không cấu hình Supabase, các tính năng liên quan đến Hồ sơ, Xem tiếp và Yêu thích sẽ tự động được ẩn khỏi giao diện. Ứng dụng vẫn hoạt động 100% chức năng xem phim bình thường.
 
 ## Tech Stack
 
@@ -21,10 +23,11 @@
 - **State**: Zustand
 - **Form**: React Hook Form + Zod
 - **Package manager**: pnpm (monorepo với Turborepo)
+- **Edge Deployment**: OpenNext (hỗ trợ Cloudflare Pages)
 
 ## Cấu trúc dự án
 
-```
+```text
 .
 ├── apps/
 │   └── web/          # Next.js app
@@ -46,8 +49,8 @@
 
 - Node.js >= 18
 - pnpm >= 9
-- Tài khoản [Supabase](https://supabase.com) (free tier là đủ)
-- Tài khoản [Vercel](https://vercel.com) (để deploy)
+- (Tuỳ chọn) Tài khoản [Supabase](https://supabase.com) (free tier là đủ, dùng cho tính năng tài khoản/cá nhân hoá)
+- Tài khoản [Vercel](https://vercel.com) hoặc [Cloudflare](https://dash.cloudflare.com) để deploy
 
 ---
 
@@ -61,91 +64,32 @@ pnpm install
 
 ---
 
-### 2. Tạo project Supabase
+### 2. Cấu hình Supabase (Tuỳ chọn)
+
+Nếu bạn muốn bật tính năng cá nhân hóa (Profile, Yêu thích, Lịch sử), bạn cần cài đặt Supabase. Nếu không, **hãy bỏ qua bước này.**
 
 1. Truy cập [supabase.com](https://supabase.com) → **New project**
-2. Điền tên project, mật khẩu database, chọn region gần nhất
-3. Sau khi tạo xong, vào **Project Settings → API** để lấy:
-   - `Project URL` → `NEXT_PUBLIC_SUPABASE_URL`
-   - `anon public` key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+2. Tạo project và vào **Project Settings → API** để lấy `Project URL` và `anon public` key.
+3. Tạo file `apps/web/.env.local` từ file mẫu:
+   ```bash
+   cp apps/web/.env.example apps/web/.env.local
+   ```
+4. Điền giá trị:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-public-key
+   ```
+5. Chạy SQL Migration trong giao diện Supabase. Xem file query đầy đủ tại: 
+   [`packages/database/migrations/20260317_movie_management.sql`](packages/database/migrations/20260317_movie_management.sql)
 
 ---
 
-### 3. Tạo bảng dữ liệu Supabase
-
-Vào **SQL Editor** trong dashboard Supabase, chạy đoạn SQL sau:
-
-```sql
--- 1. Profiles (hồ sơ người dùng)
-create table if not exists public.sr_profiles (
-  id uuid default gen_random_uuid() primary key,
-  updated_at timestamp with time zone default timezone('utc'::text, now()),
-  full_name text not null,
-  avatar_url text,
-  created_at timestamp with time zone default timezone('utc'::text, now())
-);
-
--- 2. Favorites (yêu thích)
-create table if not exists public.sr_favorites (
-  id uuid default gen_random_uuid() primary key,
-  profile_id uuid references public.sr_profiles(id) on delete cascade not null,
-  movie_slug text not null,
-  movie_title text,
-  poster_url text,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  unique(profile_id, movie_slug)
-);
-
--- 3. Watch History (lịch sử xem, có lưu tiến độ)
-create table if not exists public.sr_watch_history (
-  id uuid default gen_random_uuid() primary key,
-  profile_id uuid references public.sr_profiles(id) on delete cascade not null,
-  movie_slug text not null,
-  movie_title text,
-  episode_slug text,
-  episode_name text,
-  duration numeric,       -- tổng thời lượng (giây)
-  playback_time numeric,  -- vị trí đang xem (giây)
-  updated_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  unique(profile_id, movie_slug)
-);
-
--- Tắt RLS (dùng cá nhân/gia đình, không cần auth)
-alter table public.sr_profiles disable row level security;
-alter table public.sr_favorites disable row level security;
-alter table public.sr_watch_history disable row level security;
-```
-
-> File migration đầy đủ: [`packages/database/migrations/20260317_movie_management.sql`](packages/database/migrations/20260317_movie_management.sql)
-
----
-
-### 4. Cấu hình biến môi trường
-
-Tạo file `apps/web/.env.local` từ file mẫu:
-
-```bash
-cp apps/web/.env.example apps/web/.env.local
-```
-
-Sau đó điền giá trị thực:
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-public-key
-```
-
-| Biến | Mô tả | Lấy từ đâu |
-|------|--------|------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | URL project Supabase | Supabase → Project Settings → API → Project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Anon key public | Supabase → Project Settings → API → `anon public` |
-
----
-
-### 5. Chạy local
+### 3. Chạy local
 
 ```bash
 pnpm dev
+# hoặc
+pnpm --filter web dev
 ```
 
 Mở [http://localhost:3000](http://localhost:3000)
@@ -154,33 +98,78 @@ Mở [http://localhost:3000](http://localhost:3000)
 
 ## Deploy lên Vercel
 
-### Cách 1: Deploy nhanh từ GitHub
+Hướng dẫn chi tiết cách deploy hoàn toàn bằng dòng lệnh (CLI):
 
-1. Push code lên GitHub repository của bạn
-2. Vào [vercel.com/new](https://vercel.com/new) → Import repository
-3. Vercel sẽ tự detect Next.js, cấu hình build tự động
-4. **Quan trọng**: Đặt **Root Directory** là `apps/web`
-5. Thêm biến môi trường trong Vercel dashboard (xem bước tiếp theo)
-6. Nhấn **Deploy**
-
-### Cách 2: Dùng Vercel CLI
-
+### 1. Chuẩn bị tài khoản
+Tạo tài khoản tại [Vercel](https://vercel.com). Sau đó cài Vercel CLI nếu chưa có:
 ```bash
 npm i -g vercel
-vercel
-# Làm theo hướng dẫn, chọn root directory là apps/web
 ```
 
-### Thêm biến môi trường trên Vercel
+### 2. Khởi tạo dự án
+Chạy lệnh gốc kết nối:
+```bash
+vercel --prod
+```
+> **Bắt buộc tuân thủ** các câu trả lời sau để web nhận dạng đúng cấu trúc Monorepo:
+> - `? Set up and deploy...` ➔ Ấn **Y**
+> - `? Which scope...` ➔ Ấn **Enter**
+> - `? Link to existing project?` ➔ Nhập **n**
+> - `? What’s your project’s name?` ➔ Đặt tên web của bạn (vd: `silent-ride`) và **Enter**
+> - `? In which directory is your code located? ./` ➔ 🚨 **HÃY XÓA CHỮ `./` BẰNG PHÍM BACKSPACE, SAU ĐÓ GÕ VÀO `apps/web`** rồi ấn **Enter**.
 
-Vào **Project → Settings → Environment Variables**, thêm:
+### 3. Cấu hình Database & Cập nhật lại (Nếu có sử dụng Supabase)
+Nếu bạn muốn lưu thông tin Yêu thích / Lịch sử xem phim:
+1. Đăng ký tài khoản [Supabase](https://supabase.com), tạo dự án và lấy **Project URL** cùng **Anon Key**.
+2. Chạy đoạn Script SQL trong file [`packages/database/migrations/20260317_movie_management.sql`](packages/database/migrations/20260317_movie_management.sql) trên màn hình SQL của Supabase Dashboard.
+3. Thiết lập trực tiếp biến môi trường cho Vercel thông qua Terminal:
+   ```bash
+   vercel env add NEXT_PUBLIC_SUPABASE_URL production
+   # Khi hệ thống hỏi Value, copy dán đường link URL của bạn vào
+   
+   vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY production
+   # Khi hệ thống hỏi Value, copy dán chuỗi Anon Key vào
+   ```
+4. Cập nhật lại sản phẩm cuối cùng sau khi đã nạp biến môi trường:
+   ```bash
+   vercel --prod
+   ```
 
-| Key | Value |
-|-----|-------|
-| `NEXT_PUBLIC_SUPABASE_URL` | URL từ Supabase |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Anon key từ Supabase |
+---
 
-> Sau khi thêm biến môi trường, cần **Redeploy** để áp dụng.
+## Deploy lên Cloudflare Pages
+
+Dự án này sử dụng `open-next` để tương thích hoàn toàn cấu trúc Next.js App Router với Cloudflare Pages.
+
+### Cách 1: Deploy qua Github (Cloudflare CI/CD)
+1. Push code lên Github.
+2. Truy cập [Cloudflare Dashboard](https://dash.cloudflare.com) -> Workers & Pages -> Create application -> Pages -> Connect to Git.
+3. Chọn repo `silent-ride-movie`.
+4. Cấu hình Build settings:
+   - Framework preset: **Next.js**
+   - Build command: `pnpm run build`
+   - Build output directory: `apps/web/.open-next/assets`
+   - Root directory (tuỳ chọn): `apps/web`
+5. Thêm Environment Variables (nếu dùng Supabase):
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - *Lưu ý: Có thể bạn cần thêm nodejs compat flag tuỳ vào version của open-next*
+6. Nhấn **Save and Deploy**.
+
+### Cách 2: Deploy bằng Wrangler CLI (Local)
+1. Cài đặt các gói:
+   ```bash
+   npm i -g wrangler
+   ```
+2. Build ứng dụng:
+   ```bash
+   pnpm --filter web build
+   ```
+3. Deploy frontend:
+   ```bash
+   cd apps/web
+   npx wrangler pages deploy .open-next/assets --project-name="silent-ride"
+   ```
 
 ---
 
@@ -189,9 +178,6 @@ Vào **Project → Settings → Environment Variables**, thêm:
 ```bash
 # Chạy toàn bộ monorepo
 pnpm dev
-
-# Chỉ chạy web app
-pnpm --filter silent-ride dev
 
 # Build
 pnpm build

@@ -9,6 +9,7 @@ export default function ProfileGuard({ children }: { children: React.ReactNode }
   const router = useRouter()
   const pathname = usePathname()
   const [mounted, setMounted] = useState(false)
+  const isSupabaseEnabled = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
   useEffect(() => {
     setMounted(true)
@@ -16,7 +17,7 @@ export default function ProfileGuard({ children }: { children: React.ReactNode }
 
   // Fetch favorites and history when profile changes
   useEffect(() => {
-    if (currentProfile?.id) {
+    if (isSupabaseEnabled && currentProfile?.id) {
       // Fetch Favorites
       import('@/app/yeu-thich/actions').then(({ getFavoriteSlugs }) => {
         getFavoriteSlugs(currentProfile.id!).then(slugs => {
@@ -47,13 +48,16 @@ export default function ProfileGuard({ children }: { children: React.ReactNode }
   }, [currentProfile?.id, setFavoriteSlugs, setWatchHistory, setWatchProgress])
 
   useEffect(() => {
-    if (mounted && !currentProfile && pathname !== '/profiles') {
+    if (isSupabaseEnabled && mounted && !currentProfile && pathname !== '/profiles') {
       router.push('/profiles')
     }
-  }, [currentProfile, pathname, router, mounted])
+  }, [isSupabaseEnabled, currentProfile, pathname, router, mounted])
 
   // Prevent hydration mismatch
   if (!mounted) return null
+
+  // If no Supabase, bypass completely
+  if (!isSupabaseEnabled) return <>{children}</>
 
   // If we are on profiles page, or we have a profile, render children
   if (pathname === '/profiles' || currentProfile) {

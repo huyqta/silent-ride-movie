@@ -38,10 +38,10 @@ export const PlyrPlayer = forwardRef<PlyrPlayerHandle, PlyrPlayerProps>((props, 
 
         const defaultOptions = {
             controls: [
-                'play-large', 'play', 'rewind', 'fast-forward', 'progress',
+                'play-large', 'play', 'progress',
                 'current-time', 'mute', 'volume',
                 'captions', 'settings',
-                'airplay', 'fullscreen'
+                'airplay', 'pip', 'rewind', 'fast-forward', 'fullscreen'
             ],
             settings: ['quality', 'speed'],
             speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 4] },
@@ -155,7 +155,7 @@ export const PlyrPlayer = forwardRef<PlyrPlayerHandle, PlyrPlayerProps>((props, 
 
         document.addEventListener('fullscreenchange', handleFullscreen);
         document.addEventListener('webkitfullscreenchange', handleFullscreen);
-        
+
         return () => {
             document.removeEventListener('fullscreenchange', handleFullscreen);
             document.removeEventListener('webkitfullscreenchange', handleFullscreen);

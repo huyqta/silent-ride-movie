@@ -53,3 +53,4 @@ Thumbs.db
 
 # ─── Cloudflare / OpenNext ───────────────────────────────────────────────────
 **/.open-next/
+.env*.local

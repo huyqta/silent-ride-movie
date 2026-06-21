@@ -2,7 +2,12 @@ import { createBrowserClient } from '@supabase/ssr'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
+export const hasSupabaseConfig = () => {
+  return !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+}
+
 export const createClient = () => {
+  if (!hasSupabaseConfig()) return null as any;
   return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -10,6 +15,7 @@ export const createClient = () => {
 }
 
 export const createServerSupabaseClient = async () => {
+  if (!hasSupabaseConfig()) return null as any;
   const cookieStore = await cookies()
 
   return createServerClient(

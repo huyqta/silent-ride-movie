@@ -13,6 +13,10 @@ interface FavoriteButtonProps {
 
 export default function FavoriteButton({ movie }: FavoriteButtonProps) {
     const { currentProfile, favoriteSlugs, toggleFavoriteSlug } = useProfileStore();
+    const isSupabaseEnabled = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+
+    if (!isSupabaseEnabled) return null;
+
     const isLiked = favoriteSlugs.includes(movie.slug);
 
     const handleClick = async () => {

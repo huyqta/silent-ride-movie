@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 
 export async function getProfiles() {
   const supabase = await createServerSupabaseClient()
+  if (!supabase) return []
   const { data, error } = await supabase
     .from('sr_profiles')
     .select('*')
@@ -20,6 +21,7 @@ export async function getProfiles() {
 
 export async function createProfile(fullName: string, avatarUrl?: string) {
   const supabase = await createServerSupabaseClient()
+  if (!supabase) return { error: 'Database not configured' }
   const { data, error } = await supabase
     .from('sr_profiles')
     .insert({
@@ -39,6 +41,7 @@ export async function createProfile(fullName: string, avatarUrl?: string) {
 
 export async function deleteProfile(id: string) {
     const supabase = await createServerSupabaseClient()
+    if (!supabase) return { error: 'Database not configured' }
     const { error } = await supabase
       .from('sr_profiles')
       .delete()

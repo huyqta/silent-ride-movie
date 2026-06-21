@@ -63,6 +63,7 @@ export default function Header() {
     const [mounted, setMounted] = useState(false);
     const querySource = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('source') : null;
     const pathname = usePathname();
+    const isSupabaseEnabled = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
     const currentProfile = useProfileStore(state => state.currentProfile);
     const movieSource = useStore(state => state.movieSource);
@@ -405,35 +406,39 @@ export default function Header() {
                             </motion.button>
 
                             {/* Favorites Link */}
-                            <Link
-                                href="/yeu-thich"
-                                prefetch={false}
-                                className="hidden md:flex items-center gap-1 p-2 text-foreground-secondary hover:text-white transition-colors rounded-lg hover:bg-white/5 relative"
-                            >
-                                <Heart className="w-5 h-5" />
-                                {mounted && favoriteSlugs.length > 0 && (
-                                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-[var(--primary-text)] text-xs rounded-full flex items-center justify-center">
-                                        {favoriteSlugs.length}
-                                    </span>
-                                )}
-                            </Link>
+                            {isSupabaseEnabled && (
+                                <Link
+                                    href="/yeu-thich"
+                                    prefetch={false}
+                                    className="hidden md:flex items-center gap-1 p-2 text-foreground-secondary hover:text-white transition-colors rounded-lg hover:bg-white/5 relative"
+                                >
+                                    <Heart className="w-5 h-5" />
+                                    {mounted && favoriteSlugs.length > 0 && (
+                                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-[var(--primary-text)] text-xs rounded-full flex items-center justify-center">
+                                            {favoriteSlugs.length}
+                                        </span>
+                                    )}
+                                </Link>
+                            )}
 
                             {/* History Link */}
-                            <Link
-                                href="/lich-su"
-                                prefetch={false}
-                                className="hidden md:flex items-center gap-1 p-2 text-foreground-secondary hover:text-white transition-colors rounded-lg hover:bg-white/5 relative"
-                            >
-                                <History className="w-5 h-5" />
-                                {mounted && watchHistory.length > 0 && (
-                                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-accent text-white text-xs rounded-full flex items-center justify-center">
-                                        {watchHistory.length}
-                                    </span>
-                                )}
-                            </Link>
+                            {isSupabaseEnabled && (
+                                <Link
+                                    href="/lich-su"
+                                    prefetch={false}
+                                    className="hidden md:flex items-center gap-1 p-2 text-foreground-secondary hover:text-white transition-colors rounded-lg hover:bg-white/5 relative"
+                                >
+                                    <History className="w-5 h-5" />
+                                    {mounted && watchHistory.length > 0 && (
+                                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-accent text-white text-xs rounded-full flex items-center justify-center">
+                                            {watchHistory.length}
+                                        </span>
+                                    )}
+                                </Link>
+                            )}
 
                             {/* Profile Switcher */}
-                            {currentProfile && (
+                            {isSupabaseEnabled && currentProfile && (
                                 <motion.button
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
@@ -628,33 +633,37 @@ export default function Header() {
                                     </Link>
                                 ))}
 
-                                <hr className="border-border my-4" />
-                                <Link
-                                    href="/yeu-thich"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                    className="flex items-center gap-3 px-4 py-3 text-foreground-secondary hover:text-white hover:bg-white/5 rounded-lg transition-colors"
-                                >
-                                    <Heart className="w-5 h-5" />
-                                    Yêu thích
-                                    {mounted && favoriteSlugs.length > 0 && (
-                                        <span className="ml-auto px-2 py-0.5 bg-primary text-[var(--primary-text)] text-xs rounded-full">
-                                            {favoriteSlugs.length}
-                                        </span>
-                                    )}
-                                </Link>
-                                <Link
-                                    href="/lich-su"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                    className="flex items-center gap-3 px-4 py-3 text-foreground-secondary hover:text-white hover:bg-white/5 rounded-lg transition-colors"
-                                >
-                                    <History className="w-5 h-5" />
-                                    Lịch sử xem
-                                    {mounted && watchHistory.length > 0 && (
-                                        <span className="ml-auto px-2 py-0.5 bg-accent text-white text-xs rounded-full">
-                                            {watchHistory.length}
-                                        </span>
-                                    )}
-                                </Link>
+                                {isSupabaseEnabled && (
+                                    <>
+                                        <hr className="border-border my-4" />
+                                        <Link
+                                            href="/yeu-thich"
+                                            onClick={() => setMobileMenuOpen(false)}
+                                            className="flex items-center gap-3 px-4 py-3 text-foreground-secondary hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                                        >
+                                            <Heart className="w-5 h-5" />
+                                            Yêu thích
+                                            {mounted && favoriteSlugs.length > 0 && (
+                                                <span className="ml-auto px-2 py-0.5 bg-primary text-[var(--primary-text)] text-xs rounded-full">
+                                                    {favoriteSlugs.length}
+                                                </span>
+                                            )}
+                                        </Link>
+                                        <Link
+                                            href="/lich-su"
+                                            onClick={() => setMobileMenuOpen(false)}
+                                            className="flex items-center gap-3 px-4 py-3 text-foreground-secondary hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                                        >
+                                            <History className="w-5 h-5" />
+                                            Lịch sử xem
+                                            {mounted && watchHistory.length > 0 && (
+                                                <span className="ml-auto px-2 py-0.5 bg-accent text-white text-xs rounded-full">
+                                                    {watchHistory.length}
+                                                </span>
+                                            )}
+                                        </Link>
+                                    </>
+                                )}
                             </nav>
                         </div>
                     </motion.div>

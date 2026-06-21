@@ -16,6 +16,7 @@ export async function updateWatchHistory(profileId: string, historyData: WatchHi
   
   const data = validated.data
   const supabase = await createServerSupabaseClient()
+  if (!supabase) return
 
   // Verify profile exists
   const { data: profile } = await supabase
@@ -50,6 +51,7 @@ export async function updateWatchHistory(profileId: string, historyData: WatchHi
 export async function getWatchHistory(profileId: string) {
   if (!profileId) return []
   const supabase = await createServerSupabaseClient()
+  if (!supabase) return []
 
   const { data } = await supabase
     .from('sr_watch_history')
@@ -63,6 +65,7 @@ export async function getWatchHistory(profileId: string) {
 export async function clearHistory(profileId: string) {
     if (!profileId) return { error: 'Vui lòng chọn Profile' }
     const supabase = await createServerSupabaseClient()
+    if (!supabase) return { error: 'Database not configured' }
   
     const { error } = await supabase
       .from('sr_watch_history')
