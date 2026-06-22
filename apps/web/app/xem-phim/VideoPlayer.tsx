@@ -272,7 +272,15 @@ export default function VideoPlayer({
                     break;
                 case "f":
                     e.preventDefault();
-                    if (playerRef.current) playerRef.current.fullscreen.toggle();
+                    if (playerRef.current) {
+                        // iOS không hỗ trợ Fullscreen API chuẩn — dùng webkitEnterFullscreen
+                        const videoEl = playerRef.current.media as HTMLVideoElement;
+                        if (videoEl && (videoEl as any).__iosFullscreen) {
+                            (videoEl as any).__iosFullscreen();
+                        } else {
+                            playerRef.current.fullscreen.toggle();
+                        }
+                    }
                     break;
                 case "j":
                     e.preventDefault();

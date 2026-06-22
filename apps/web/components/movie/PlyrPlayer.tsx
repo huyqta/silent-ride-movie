@@ -3,6 +3,13 @@
 import React, { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import Hls from 'hls.js';
 
+// iOS (Safari/Chrome) dùng WebKit, không hỗ trợ Fullscreen API chuẩn.
+// Detect để dùng webkitEnterFullscreen thay thế.
+const isIOS = () =>
+    typeof navigator !== 'undefined' &&
+    /iPad|iPhone|iPod/.test(navigator.userAgent) &&
+    !(window as any).MSStream;
+
 declare global {
     interface Window {
         Plyr: any;
@@ -74,6 +81,22 @@ export const PlyrPlayer = forwardRef<PlyrPlayerHandle, PlyrPlayerProps>((props, 
                 const player = new Constructor(video, defaultOptions);
                 playerRef.current = player;
 
+                // iOS: Plyr gọi requestFullscreen() khi bấm nút fullscreen — không hoạt động trên iOS.
+                // Override bằng cách patch nút fullscreen để gọi webkitEnterFullscreen thay thế.
+                if (isIOS()) {
+                    player.on('ready', () => {
+                        const fullscreenBtn = player.elements?.buttons?.fullscreen as HTMLElement | null;
+                        if (fullscreenBtn) {
+                            fullscreenBtn.addEventListener('click', (e: Event) => {
+                                e.stopImmediatePropagation();
+                                if ((video as any).webkitEnterFullscreen) {
+                                    (video as any).webkitEnterFullscreen();
+                                }
+                            }, true); // capture phase để chặn trước Plyr
+                        }
+                    });
+                }
+
                 if (hlsUrl && Hls.isSupported()) {
                     const hls = new Hls(startTime && startTime > 0 ? { startPosition: startTime } : {});
                     hlsRef.current = hls;
@@ -133,18 +156,39 @@ export const PlyrPlayer = forwardRef<PlyrPlayerHandle, PlyrPlayerProps>((props, 
     }, [hlsUrl, JSON.stringify(source)]);
 
     useEffect(() => {
-        const handleFullscreen = () => {
+        const video = videoRef.current;
+
+        // Trên iOS, Plyr không thể gọi requestFullscreen() chuẩn.
+        // Override: khi Plyr trigger fullscreen, dùng webkitEnterFullscreen của <video>.
+        const handlePlyrFullscreen = () => {
+            if (!video) return;
+            if (isIOS()) {
+                // iOS chỉ hỗ trợ webkitEnterFullscreen trực tiếp trên <video>
+                if ((video as any).webkitEnterFullscreen) {
+                    (video as any).webkitEnterFullscreen();
+                }
+                return;
+            }
+            // Android/Desktop: dùng Fullscreen API chuẩn
+            if (video.requestFullscreen) {
+                video.requestFullscreen().catch(() => {});
+            } else if ((video as any).webkitRequestFullscreen) {
+                (video as any).webkitRequestFullscreen();
+            }
+        };
+
+        // Orientation lock — chỉ Android hỗ trợ, iOS luôn throw error nên skip
+        const handleFullscreenChange = () => {
+            if (isIOS()) return; // iOS không hỗ trợ orientation lock
             try {
-                if (document.fullscreenElement) {
-                    // Lock to landscape when entering fullscreen
-                    if (window.screen && window.screen.orientation && (window.screen.orientation as any).lock) {
-                        (window.screen.orientation as any).lock('landscape').catch(() => {
-                            // Silently fail if not supported or denied
-                        });
+                const isFullscreen =
+                    !!(document.fullscreenElement || (document as any).webkitFullscreenElement);
+                if (isFullscreen) {
+                    if (window.screen?.orientation && (window.screen.orientation as any).lock) {
+                        (window.screen.orientation as any).lock('landscape').catch(() => {});
                     }
                 } else {
-                    // Unlock orientation when exiting fullscreen
-                    if (window.screen && window.screen.orientation && window.screen.orientation.unlock) {
+                    if (window.screen?.orientation?.unlock) {
                         window.screen.orientation.unlock();
                     }
                 }
@@ -153,18 +197,32 @@ export const PlyrPlayer = forwardRef<PlyrPlayerHandle, PlyrPlayerProps>((props, 
             }
         };
 
-        document.addEventListener('fullscreenchange', handleFullscreen);
-        document.addEventListener('webkitfullscreenchange', handleFullscreen);
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+
+        // Expose helper cho VideoPlayer (phím tắt 'f')
+        if (video) {
+            (video as any).__iosFullscreen = handlePlyrFullscreen;
+        }
 
         return () => {
-            document.removeEventListener('fullscreenchange', handleFullscreen);
-            document.removeEventListener('webkitfullscreenchange', handleFullscreen);
+            document.removeEventListener('fullscreenchange', handleFullscreenChange);
+            document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
         };
     }, []);
 
     return (
         <div className="plyr-container w-full h-full min-h-[200px] rounded-lg overflow-hidden border border-white/5 shadow-2xl relative z-10 bg-black group flex items-center justify-center">
-            <video ref={videoRef} className="plyr-react h-full w-full block" crossOrigin="anonymous" playsInline />
+            {/* playsInline + webkit-playsinline: bắt buộc để iOS không auto-fullscreen khi play */}
+            <video
+                ref={videoRef}
+                className="plyr-react h-full w-full block"
+                crossOrigin="anonymous"
+                playsInline
+                // @ts-ignore — webkit attribute cần cho iOS Safari
+                webkit-playsinline="true"
+                x-webkit-airplay="allow"
+            />
         </div>
     );
 });
