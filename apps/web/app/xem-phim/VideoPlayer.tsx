@@ -61,7 +61,7 @@ export default function VideoPlayer({
         const normCurrentSlug = episode.replace(/^tap-/, '').replace(/^0+/, '').toLowerCase();
         const normItemName = item.name.replace(/^tap\s/i, '').replace(/^0+/, '').toLowerCase();
         const normCurrentName = episodeName?.replace(/^tap\s/i, '').replace(/^0+/, '').toLowerCase();
-        
+
         return normItemSlug === normCurrentSlug || normItemName === normCurrentName || item.slug === episode;
     });
     const ncEmbed = nguonCEpisode?.embed;
@@ -111,14 +111,14 @@ export default function VideoPlayer({
             ];
 
             const results: Record<string, boolean> = {};
-            
+
             await Promise.all(checks.map(async (check) => {
                 const isAvailable = await checkLink(check.url, check.key);
                 results[check.key] = isAvailable;
             }));
 
             setAvailability(results);
-            
+
             // Auto-select the highest priority available source
             // Priority: OP-M3U8 > NC-M3U8 > PA-M3U8 > OP-EMBED > NC-EMBED > PA-EMBED
             let selected = null;
@@ -255,9 +255,9 @@ export default function VideoPlayer({
                     skipTime(10);
                     break;
                 case "ArrowUp":
-                    if (nextEpisodeSlug) { 
-                        e.preventDefault(); 
-                        router.push(`/xem-phim/${movieSlug}/${nextEpisodeSlug}${serverIndex !== undefined ? `?sv=${serverIndex}` : ''}`); 
+                    if (nextEpisodeSlug) {
+                        e.preventDefault();
+                        router.push(`/xem-phim/${movieSlug}/${nextEpisodeSlug}${serverIndex !== undefined ? `?sv=${serverIndex}` : ''}`);
                     }
                     break;
                 case "ArrowDown":
@@ -363,7 +363,7 @@ export default function VideoPlayer({
                 ) : null}
 
                 {/* Next episode button — hiển thị khi hover, ẩn khi đang load */}
-                {!isCheckingSources && nextEpisodeSlug && (
+                {/* {!isCheckingSources && nextEpisodeSlug && (
                     <div className={`absolute ${useEmbed ? 'bottom-4' : 'bottom-16'} right-4 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-200`}>
                         <button
                             onClick={() => router.push(`/xem-phim/${movieSlug}/${nextEpisodeSlug}${serverIndex !== undefined ? `?sv=${serverIndex}` : ''}`)}
@@ -373,13 +373,13 @@ export default function VideoPlayer({
                             <ChevronRight className="w-4 h-4" />
                         </button>
                     </div>
-                )}
+                )} */}
             </div>
 
             {/* Controls bar — Redundancy options */}
             <div className="mt-6 flex flex-wrap items-center justify-end p-4 bg-neutral-900/50 backdrop-blur-xl rounded-2xl border border-white/5 shadow-xl gap-3">
                 <span className="text-[10px] font-black tracking-widest text-foreground-muted mr-auto px-2 uppercase">Nguồn phát dự phòng</span>
-                
+
                 {m3u8Url && (
                     <button
                         onClick={() => switchToM3u8(m3u8Url, "op-m3u8")}
