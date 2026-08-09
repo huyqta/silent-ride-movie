@@ -6,7 +6,7 @@ import { History, Trash2, Play, Clock, Info } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { clearHistory, getWatchHistory } from './actions'
-import { getImageUrl } from '@/lib/api/ophim'
+import { getImageUrl } from '@/lib/api/unified'
 import { useProfileStore } from '@/lib/store/useProfileStore'
 import { useEffect } from 'react'
 

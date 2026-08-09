@@ -34,11 +34,11 @@ export async function getMoviesByTypeVSMov(type: string, page: number = 1, limit
         // OPhim sends: phim-le, phim-bo, hoat-hinh, tv-shows, etc.
         // Let's check: /the-loai/slug or type parameters if any, but since the API provided does the-loai & quoc-gia,
         // let's check if the type is series / single or if we need to call `/the-loai/type`
-        let endpoint = `the-loai/${type}`;
+        let endpoint = `danh-sach/${type}`;
         if (type === 'phim-le') {
-            endpoint = `the-loai/phim-le`; // or check if type=single works on year/genre
+            endpoint = `danh-sach/phim-le`;
         } else if (type === 'phim-bo') {
-            endpoint = `the-loai/phim-bo`;
+            endpoint = `danh-sach/phim-bo`;
         }
         // Let's query
         const response = await fetch(`${VSMOV_API}/${endpoint}?page=${page}&limit=${limit}`, {
@@ -159,16 +159,48 @@ export async function getMovieDetailVSMov(slug: string) {
     try {
         const response = await fetch(`${VSMOV_API}/phim/${slug}`, {
             next: { revalidate: 3600 },
+        }).catch((err) => {
+            console.warn("VSMov API network request failed (probably CORS or offline):", err.message);
+            return null;
         });
-        if (!response.ok) return null;
-        const data = await response.json();
+
+        if (!response || !response.ok) return null;
+        const resJson = await response.json().catch(() => null);
         
-        if (data.movie?.category?.some((cat: any) => cat.slug === "phim-18")) {
+        // VSMov response format has the item inside "data.item"
+        const movieItem = resJson?.data?.item;
+        if (!movieItem) return null;
+
+        if (movieItem.category?.some((cat: any) => cat.slug === "phim-18")) {
             return null; //restricted
         }
-        return data;
+
+        // Map VSMov custom data structure to matching OPhim structure
+        return {
+            status: true,
+            movie: {
+                _id: movieItem.id || movieItem.slug,
+                name: movieItem.name,
+                slug: movieItem.slug,
+                origin_name: movieItem.origin_name || "",
+                content: movieItem.content || "",
+                thumb_url: movieItem.thumb_url || "",
+                poster_url: movieItem.poster_url || "",
+                time: movieItem.time || "",
+                episode_current: movieItem.episode_current || "",
+                episode_total: movieItem.episode_total || "",
+                quality: movieItem.quality || "HD",
+                lang: movieItem.lang || "",
+                year: movieItem.year || new Date().getFullYear(),
+                category: movieItem.category || [],
+                country: movieItem.country || [],
+                actor: movieItem.actor || [],
+                director: movieItem.director || [],
+            },
+            episodes: movieItem.episodes || []
+        };
     } catch (err) {
-        console.error(`Error fetching movie detail from VSMov for slug ${slug}:`, err);
+        console.warn(`Error fetching movie detail from VSMov for slug ${slug}:`, err);
         return null;
     }
 }

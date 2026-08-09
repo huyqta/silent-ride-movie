@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { getCategories, getCountries, movieTypes, advancedSearch } from "@/lib/api/ophim";
+import { getCategories, getCountries, movieTypes, advancedSearch } from "@/lib/api/unified";
 import MovieGrid from "@/components/movie/MovieGrid";
 import Pagination from "@/components/ui/Pagination";
 import AdvancedSearchForm from "@/components/search/AdvancedSearchForm";

@@ -99,8 +99,9 @@ export default function Header() {
     useEffect(() => {
         if (mounted) {
             document.cookie = `movie-source=${movieSource}; path=/; max-age=31536000; SameSite=Lax`;
+            localStorage.setItem("movie-source", movieSource);
         }
-    }, [mounted]);
+    }, [mounted, movieSource]);
 
     const sourceConfig = {
         ophim:  { hex: '#E50914', hoverHex: '#b20710', name: 'OPhim' },
@@ -113,9 +114,10 @@ export default function Header() {
 
     const handleSourceChange = (source: 'ophim' | 'nguonc' | 'kkphim' | 'vsmov') => {
         if (source === movieSource) return;
+        localStorage.setItem("movie-source", source);
         document.cookie = `movie-source=${source}; path=/; max-age=31536000; SameSite=Lax`;
         setMovieSource(source);
-        router.refresh();
+        window.location.reload();
     };
 
     // Handle scroll effect

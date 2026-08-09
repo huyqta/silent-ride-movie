@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { notFound, useSearchParams } from "next/navigation";
 import { ChevronRight, Home } from "lucide-react";
-import { getMovieDetail, getMoviePeoples, getMovieDetailNguonC, getMovieDetailPhimApi } from "@/lib/api/ophim";
+import { getMovieDetail } from "@/lib/api/unified";
+import { getMoviePeoples, getMovieDetailNguonC, getMovieDetailPhimApi } from "@/lib/api/ophim";
 import { getMovieDetailVSMov } from "@/lib/api/vsmov";
 import VideoPlayer from "./VideoPlayer";
 import EpisodeSelector from "./EpisodeSelector";
@@ -22,13 +23,22 @@ export default function WatchPageClient({ params }: ClientProps) {
     const requestedServerIndex = sv ? parseInt(sv) : undefined;
 
     const { data: watchData, loading } = useMovieData(`watch-${slug}`, async () => {
-        const [d, p, n, pa, vs] = await Promise.all([
-            getMovieDetail(slug),
-            getMoviePeoples(slug).catch(() => null),
+        // 1. Fetch main movie detail based on active source immediately (essential for playback)
+        const d = await getMovieDetail(slug).catch(() => null);
+        const p = await getMoviePeoples(slug).catch(() => null);
+
+        // 2. Fetch backup sources asynchronously so they appear in the player
+        // We catch all errors locally to prevent a single offline API (like VSMov) from breaking page load
+        const [n, pa, vs] = await Promise.all([
             getMovieDetailNguonC(slug).catch(() => null),
             getMovieDetailPhimApi(slug).catch(() => null),
-            getMovieDetailVSMov(slug).catch(() => null)
+            // Fetch VSMov detail and safely catch error (returning null to indicate no response, which resolves to no link button)
+            getMovieDetailVSMov(slug).catch((err) => {
+                console.warn("VSMov detail query failed:", err);
+                return null;
+            })
         ]);
+
         return { d, p, n, pa, vs };
     });
 

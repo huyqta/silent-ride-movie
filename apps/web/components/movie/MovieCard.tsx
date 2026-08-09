@@ -1,10 +1,11 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Play, Heart, Clock, Star } from "lucide-react";
-import { getImageUrl } from "@/lib/api/ophim";
+import { getImageUrl, getUrlCountBySource } from "@/lib/api/unified";
 import { useStore } from "@/lib/store/useStore";
 import { useProfileStore } from "@/lib/store/useProfileStore";
 import { toggleFavorite } from "@/app/yeu-thich/actions";
@@ -14,12 +15,53 @@ interface MovieCardProps {
     movie: Movie;
     index?: number;
     showProgress?: boolean;
+    /** Actual playable URL count fetched from detail API. undefined = loading, -1 = error */
+    urlCount?: number;
 }
 
-export default function MovieCard({ movie, index = 0, showProgress = true }: MovieCardProps) {
+export default function MovieCard({ movie, index = 0, showProgress = true, urlCount: propUrlCount }: MovieCardProps) {
     const { currentProfile, favoriteSlugs, toggleFavoriteSlug, watchProgress } = useProfileStore();
     const isLiked = favoriteSlugs.includes(movie.slug);
     
+    // Auto-fetch URL count if not passed from prop
+    const [localUrlCount, setLocalUrlCount] = useState<number | undefined>(undefined);
+    const [fetched, setFetched] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    const urlCount = propUrlCount !== undefined ? propUrlCount : localUrlCount;
+
+    useEffect(() => {
+        if (propUrlCount !== undefined || fetched) return;
+        const el = containerRef.current;
+        if (!el) return;
+
+        // Resolve source: custom source on item OR fallback to system active source
+        const getSourceHelper = async () => {
+            let source = movie._source;
+            if (!source) {
+                const { getSource } = await import("@/lib/api/unified");
+                source = getSource();
+            }
+            return source;
+        };
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && !fetched) {
+                    setFetched(true);
+                    getSourceHelper().then((source) => {
+                        getUrlCountBySource(movie.slug, source).then((count) => {
+                            setLocalUrlCount(count);
+                        });
+                    });
+                }
+            },
+            { threshold: 0.1 }
+        );
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, [movie.slug, movie._source, fetched, propUrlCount]);
+
     // Get progress from profile store instead of local useStore
     const progress = showProgress ? watchProgress[movie.slug] : null;
 
@@ -55,6 +97,7 @@ export default function MovieCard({ movie, index = 0, showProgress = true }: Mov
 
     return (
         <motion.div
+            ref={containerRef}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: index * 0.05 }}
@@ -64,7 +107,7 @@ export default function MovieCard({ movie, index = 0, showProgress = true }: Mov
                 <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-background-secondary">
                     {/* Thumbnail */}
                     <Image
-                        src={getImageUrl(movie.thumb_url)}
+                        src={getImageUrl(movie.thumb_url, movie._source)}
                         alt={movie.name}
                         fill
                         sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
@@ -81,10 +124,25 @@ export default function MovieCard({ movie, index = 0, showProgress = true }: Mov
                         </div>
                     )}
 
-                    {/* Episode badge */}
+                    {/* Episode badge + URL count */}
                     {movie.episode_current && (
-                        <div className="absolute top-2 right-2 px-2 py-0.5 bg-black/70 text-white text-xs rounded">
-                            {movie.episode_current}
+                        <div className="absolute top-2 right-2 flex items-center gap-1">
+                            <div className="px-2 py-0.5 bg-black/70 text-white text-xs rounded">
+                                {movie.episode_current}
+                            </div>
+                            {urlCount === undefined && (
+                                <span className="w-1.5 h-1.5 rounded-full bg-white/50 animate-pulse" />
+                            )}
+                            {urlCount !== undefined && urlCount >= 0 && urlCount === 0 && (
+                                <span className="px-1.5 py-0.5 text-[10px] font-bold rounded bg-red-500/80 text-white">
+                                    N/A
+                                </span>
+                            )}
+                            {urlCount !== undefined && urlCount > 0 && (
+                                <span className="px-1.5 py-0.5 text-[10px] font-bold rounded bg-green-600/80 text-white">
+                                    {urlCount}
+                                </span>
+                            )}
                         </div>
                     )}
 

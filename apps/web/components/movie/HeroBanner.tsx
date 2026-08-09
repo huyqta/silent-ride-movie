@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Play, Info, Star } from "lucide-react";
-import { getImageUrl } from "@/lib/api/ophim";
+import { getImageUrl } from "@/lib/api/unified";
 import type { Movie } from "@/types/movie";
 
 interface HeroBannerProps {

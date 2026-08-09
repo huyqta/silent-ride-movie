@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Play, Calendar, Clock, Globe, Star } from "lucide-react";
-import { getMovieDetail, getImageUrl } from "@/lib/api/ophim";
+import { getMovieDetail, getImageUrl } from "@/lib/api/unified";
 import FavoriteButton from "./FavoriteButton";
 import EpisodeList from "./EpisodeList";
 import SplashScreen from "@/components/ui/SplashScreen";
@@ -104,11 +104,38 @@ export default function MovieDetailPageClient({ params }: ClientProps) {
                         </div>
 
                         {/* Episode info */}
-                        {movie.episode_current && (
-                            <p className="text-foreground-muted mb-4">
-                                {movie.episode_current} / {movie.episode_total || "?"}
-                            </p>
-                        )}
+                        {movie.episode_current && (() => {
+                            const isSingle = movie.type === "single";
+                            // Count episodes that have at least one valid URL (across all servers, deduplicated by slug)
+                            const slugsWithUrl = new Set(
+                                episodes.flatMap((srv) =>
+                                    srv.server_data.filter(
+                                        (ep) => ep.link_embed || ep.link_m3u8
+                                    ).map((ep) => ep.slug)
+                                )
+                            );
+                            const urlCount = slugsWithUrl.size;
+                            const hasUrl = urlCount > 0;
+
+                            return (
+                                <div className="flex flex-wrap items-center gap-2 mb-4">
+                                    <span className="text-foreground-muted">
+                                        {movie.episode_current}
+                                        {movie.episode_total && ` / ${movie.episode_total}`}
+                                    </span>
+                                    {!isSingle && hasUrl && (
+                                        <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/15 text-green-400 border border-green-500/30 font-medium">
+                                            {urlCount} URL
+                                        </span>
+                                    )}
+                                    {!hasUrl && (
+                                        <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 border border-red-500/30 font-semibold">
+                                            N/A
+                                        </span>
+                                    )}
+                                </div>
+                            );
+                        })()}
 
                         {/* Categories */}
                         {movie.category && movie.category.length > 0 && (

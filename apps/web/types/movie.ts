@@ -27,6 +27,7 @@ export interface Movie {
     imdb?: {
         id?: string;
     };
+    _source?: "ophim" | "nguonc" | "kkphim" | "vsmov";
 }
 
 export interface MovieDetail extends Movie {
