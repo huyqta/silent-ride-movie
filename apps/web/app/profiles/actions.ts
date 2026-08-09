@@ -1,15 +1,13 @@
-'use server'
-
+import { getSupabaseBrowserClient } from '@/lib/supabase-browser'
 import {
   buildProfileAvatarUrl,
-  createServerDataSupabaseClient,
   normalizeProfileName,
-} from '@repo/database'
-import { revalidatePath } from 'next/cache'
+} from '@repo/database/profile-utils'
 
 export async function getProfiles() {
-  const supabase = createServerDataSupabaseClient()
+  const supabase = getSupabaseBrowserClient()
   if (!supabase) return []
+
   const { data, error } = await supabase
     .from('sr_profiles')
     .select('*')
@@ -29,8 +27,9 @@ export async function createProfile(fullName: string, avatarUrl?: string) {
     return { error: 'Vui lòng nhập tên profile' }
   }
 
-  const supabase = createServerDataSupabaseClient()
+  const supabase = getSupabaseBrowserClient()
   if (!supabase) return { error: 'Database not configured' }
+
   const { data, error } = await supabase
     .from('sr_profiles')
     .insert({
@@ -44,20 +43,19 @@ export async function createProfile(fullName: string, avatarUrl?: string) {
     return { error: error.message }
   }
 
-  revalidatePath('/profiles')
   return { success: true, data }
 }
 
 export async function deleteProfile(id: string) {
-    const supabase = createServerDataSupabaseClient()
-    if (!supabase) return { error: 'Database not configured' }
-    const { error } = await supabase
-      .from('sr_profiles')
-      .delete()
-      .eq('id', id)
-  
-    if (error) return { error: error.message }
-    
-    revalidatePath('/profiles')
-    return { success: true }
+  const supabase = getSupabaseBrowserClient()
+  if (!supabase) return { error: 'Database not configured' }
+
+  const { error } = await supabase
+    .from('sr_profiles')
+    .delete()
+    .eq('id', id)
+
+  if (error) return { error: error.message }
+
+  return { success: true }
 }

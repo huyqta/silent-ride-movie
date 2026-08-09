@@ -106,11 +106,12 @@ export default function Header() {
         ophim:  { hex: '#E50914', hoverHex: '#b20710', name: 'OPhim' },
         nguonc: { hex: '#0063E5', hoverHex: '#004db3', name: 'NguonPhim' },
         kkphim: { hex: '#F5C518', hoverHex: '#d4a800', name: 'KKPhim' },
+        vsmov:  { hex: '#6366F1', hoverHex: '#4f46e5', name: 'VSMov' },
     } as const;
     const activeColor = sourceConfig[movieSource].hex;
     const activeHoverColor = sourceConfig[movieSource].hoverHex;
 
-    const handleSourceChange = (source: 'ophim' | 'nguonc' | 'kkphim') => {
+    const handleSourceChange = (source: 'ophim' | 'nguonc' | 'kkphim' | 'vsmov') => {
         if (source === movieSource) return;
         document.cookie = `movie-source=${source}; path=/; max-age=31536000; SameSite=Lax`;
         setMovieSource(source);

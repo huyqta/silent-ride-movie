@@ -23,6 +23,7 @@ interface VideoPlayerProps {
     serverIndex?: number;
     nguonCData?: any;
     phimApiData?: any;
+    vsmovData?: any;
 }
 
 export default function VideoPlayer({
@@ -38,6 +39,7 @@ export default function VideoPlayer({
     serverIndex,
     nguonCData,
     phimApiData,
+    vsmovData,
 }: VideoPlayerProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -53,7 +55,7 @@ export default function VideoPlayer({
     const [useEmbed, setUseEmbed] = useState<boolean>(false);
     const [currentEmbedUrl, setCurrentEmbedUrl] = useState<string | null>(null);
     const [currentM3u8Url, setCurrentM3u8Url] = useState<string | null>(null);
-    const [activeSource, setActiveSource] = useState<"op-m3u8" | "op-embed" | "nc-m3u8" | "nc-embed" | "pa-m3u8" | "pa-embed" | null>(null);
+    const [activeSource, setActiveSource] = useState<"op-m3u8" | "op-embed" | "nc-m3u8" | "nc-embed" | "pa-m3u8" | "pa-embed" | "vs-embed" | null>(null);
     const [availability, setAvailability] = useState<Record<string, boolean | null>>({});
     const [isCheckingSources, setIsCheckingSources] = useState(true);
 
@@ -80,6 +82,17 @@ export default function VideoPlayer({
     });
     const paEmbed = phimApiEpisode?.link_embed;
     const paM3u8 = phimApiEpisode?.link_m3u8;
+
+    // VSMov mapping
+    const vsmovEpisode = vsmovData?.episodes?.[0]?.server_data?.find((item: any) => {
+        const normItemSlug = item.slug.replace(/^tap-/, '').replace(/^0+/, '').toLowerCase();
+        const normCurrentSlug = episode.replace(/^tap-/, '').replace(/^0+/, '').toLowerCase();
+        const normItemName = item.name.replace(/^tap\s/i, '').replace(/^0+/, '').toLowerCase();
+        const normCurrentName = episodeName?.replace(/^tap\s/i, '').replace(/^0+/, '').toLowerCase();
+
+        return normItemSlug === normCurrentSlug || normItemName === normCurrentName || item.slug === episode;
+    });
+    const vsEmbed = vsmovEpisode?.link_embed;
 
     // Check link availability and auto-select best source
     useEffect(() => {
@@ -109,7 +122,8 @@ export default function VideoPlayer({
                 { key: 'pa-m3u8', url: paM3u8, type: 'm3u8' },
                 { key: 'op-embed', url: embedUrl, type: 'embed' },
                 { key: 'nc-embed', url: ncEmbed, type: 'embed' },
-                { key: 'pa-embed', url: paEmbed, type: 'embed' }
+                { key: 'pa-embed', url: paEmbed, type: 'embed' },
+                { key: 'vs-embed', url: vsEmbed, type: 'embed' }
             ];
 
             const results: Record<string, boolean> = {};
@@ -157,7 +171,7 @@ export default function VideoPlayer({
         };
 
         verifySources();
-    }, [embedUrl, m3u8Url, ncEmbed, ncM3u8, paEmbed, paM3u8, episode]);
+    }, [embedUrl, m3u8Url, ncEmbed, ncM3u8, paEmbed, paM3u8, vsEmbed, episode]);
 
     // Add to history on mount
     useEffect(() => {
@@ -475,6 +489,16 @@ export default function VideoPlayer({
                     >
                         <span className={`w-2 h-2 rounded-full ${availability['pa-embed'] === false ? 'bg-red-500' : 'bg-green-500'}`} />
                         PA-EMBED
+                    </button>
+                )}
+
+                {vsEmbed && (
+                    <button
+                        onClick={() => switchToEmbed(vsEmbed, "vs-embed")}
+                        className={`px-4 py-2 border rounded-xl text-xs font-black tracking-widest transition-all flex items-center gap-2 ${activeSource === "vs-embed" ? "bg-primary/20 border-primary text-primary" : "bg-white/5 border-white/10 text-foreground-muted hover:bg-white/10"}`}
+                    >
+                        <span className={`w-2 h-2 rounded-full ${availability['vs-embed'] === false ? 'bg-red-500' : 'bg-green-500'}`} />
+                        VS-EMBED
                     </button>
                 )}
             </div>

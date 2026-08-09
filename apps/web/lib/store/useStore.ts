@@ -32,8 +32,8 @@ interface StoreState {
     // UI State
     sidebarOpen: boolean;
     setSidebarOpen: (open: boolean) => void;
-    movieSource: 'ophim' | 'nguonc' | 'kkphim';
-    setMovieSource: (source: 'ophim' | 'nguonc' | 'kkphim') => void;
+    movieSource: 'ophim' | 'nguonc' | 'kkphim' | 'vsmov';
+    setMovieSource: (source: 'ophim' | 'nguonc' | 'kkphim' | 'vsmov') => void;
 }
 
 export const useStore = create<StoreState>()(

@@ -1,15 +1,11 @@
 import ProfilesClient from './client'
-import { getProfiles } from './actions'
+import { Metadata } from 'next'
 
-export const dynamic = 'force-dynamic'
-
-export const metadata = {
-  title: 'Ai đang xem? | Silent Ride Movie',
-  description: 'Chọn profile của bạn để tiếp tục',
+export const metadata: Metadata = {
+  title: 'Chọn Profile | Silent Ride',
+  description: 'Chọn profile để bắt đầu xem phim.',
 }
 
-export default async function ProfilesPage() {
-  const initialProfiles = await getProfiles()
-  
-  return <ProfilesClient initialProfiles={initialProfiles} />
+export default function ProfilesPage() {
+  return <ProfilesClient initialProfiles={[]} />
 }

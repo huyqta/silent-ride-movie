@@ -22,72 +22,97 @@ const filterNSFW = (movies: Movie[]) => {
 
 // Fetch newly updated movies
 export async function getNewlyUpdatedMovies(page: number = 1) {
-    const response = await fetch(
-        `${BASE_URL}/danh-sach/phim-moi-cap-nhat?page=${page}`,
-        { next: { revalidate: 3600 } }
-    );
-    if (!response.ok) throw new Error("Failed to fetch movies");
-    const data = await response.json();
-    if (data.items) {
-        data.items = filterNSFW(data.items);
+    try {
+        const response = await fetch(
+            `${BASE_URL}/danh-sach/phim-moi-cap-nhat?page=${page}`,
+            { next: { revalidate: 3600 } }
+        );
+        if (!response.ok) return { items: [] };
+        const data = await response.json();
+        if (data.items) {
+            data.items = filterNSFW(data.items);
+        }
+        return data;
+    } catch (err) {
+        console.error("Failed to fetch newly updated movies:", err);
+        return { items: [] };
     }
-    return data;
 }
 
 // Fetch movies by type (phim-le, phim-bo, hoat-hinh, tv-shows, etc.)
 export async function getMoviesByType(type: string, page: number = 1, limit: number = 24) {
-    const response = await fetch(
-        `${BASE_URL}/v1/api/danh-sach/${type}?page=${page}&limit=${limit}`,
-        { next: { revalidate: 3600 } }
-    );
-    if (!response.ok) throw new Error("Failed to fetch movies");
-    const data = await response.json();
-    if (data.data?.items) {
-        data.data.items = filterNSFW(data.data.items);
+    try {
+        const response = await fetch(
+            `${BASE_URL}/v1/api/danh-sach/${type}?page=${page}&limit=${limit}`,
+            { next: { revalidate: 3600 } }
+        );
+        if (!response.ok) return { data: { items: [] } };
+        const data = await response.json();
+        if (data.data?.items) {
+            data.data.items = filterNSFW(data.data.items);
+        }
+        return data;
+    } catch (err) {
+        console.error(`Failed to fetch movies by type ${type}:`, err);
+        return { data: { items: [] } };
     }
-    return data;
 }
 
 // Fetch movies by genre
 export async function getMoviesByGenre(genreSlug: string, page: number = 1) {
-    const response = await fetch(
-        `${BASE_URL}/v1/api/the-loai/${genreSlug}?page=${page}`,
-        { next: { revalidate: 3600 } }
-    );
-    if (!response.ok) throw new Error("Failed to fetch movies");
-    const data = await response.json();
-    if (data.data?.items) {
-        data.data.items = filterNSFW(data.data.items);
+    try {
+        const response = await fetch(
+            `${BASE_URL}/v1/api/the-loai/${genreSlug}?page=${page}`,
+            { next: { revalidate: 3600 } }
+        );
+        if (!response.ok) return { data: { items: [] } };
+        const data = await response.json();
+        if (data.data?.items) {
+            data.data.items = filterNSFW(data.data.items);
+        }
+        return data;
+    } catch (err) {
+        console.error(`Failed to fetch movies by genre ${genreSlug}:`, err);
+        return { data: { items: [] } };
     }
-    return data;
 }
 
 // Fetch movies by country
 export async function getMoviesByCountry(countrySlug: string, page: number = 1) {
-    const response = await fetch(
-        `${BASE_URL}/v1/api/quoc-gia/${countrySlug}?page=${page}`,
-        { next: { revalidate: 3600 } }
-    );
-    if (!response.ok) throw new Error("Failed to fetch movies");
-    const data = await response.json();
-    if (data.data?.items) {
-        data.data.items = filterNSFW(data.data.items);
+    try {
+        const response = await fetch(
+            `${BASE_URL}/v1/api/quoc-gia/${countrySlug}?page=${page}`,
+            { next: { revalidate: 3600 } }
+        );
+        if (!response.ok) return { data: { items: [] } };
+        const data = await response.json();
+        if (data.data?.items) {
+            data.data.items = filterNSFW(data.data.items);
+        }
+        return data;
+    } catch (err) {
+        console.error(`Failed to fetch movies by country ${countrySlug}:`, err);
+        return { data: { items: [] } };
     }
-    return data;
 }
 
 // Search movies
 export async function searchMovies(keyword: string, page: number = 1) {
-    const response = await fetch(
-        `${BASE_URL}/v1/api/tim-kiem?keyword=${encodeURIComponent(keyword)}&page=${page}`,
-        { next: { revalidate: 60 } }
-    );
-    if (!response.ok) throw new Error("Failed to search movies");
-    const data = await response.json();
-    if (data.data?.items) {
-        data.data.items = filterNSFW(data.data.items);
+    try {
+        const response = await fetch(
+            `${BASE_URL}/v1/api/tim-kiem?keyword=${encodeURIComponent(keyword)}&page=${page}`,
+            { next: { revalidate: 60 } }
+        );
+        if (!response.ok) return { data: { items: [] } };
+        const data = await response.json();
+        if (data.data?.items) {
+            data.data.items = filterNSFW(data.data.items);
+        }
+        return data;
+    } catch (err) {
+        console.error(`Failed to search movies for keyword ${keyword}:`, err);
+        return { data: { items: [] } };
     }
-    return data;
 }
 
 // Advanced Search / Filter movies

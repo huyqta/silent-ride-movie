@@ -24,19 +24,58 @@ export default function HomePage() {
       subteam,
       chieuRap
     ] = await Promise.all([
-      getNewlyUpdatedMovies(1),
-      getMoviesByType("phim-le", 1),
-      getMoviesByType("phim-bo", 1),
-      getMoviesByType("hoat-hinh", 1),
-      getMoviesByType("tv-shows", 1),
-      getMoviesByType("phim-vietsub", 1),
-      getMoviesByType("phim-thuyet-minh", 1),
-      getMoviesByType("phim-long-tieng", 1),
-      getMoviesByType("phim-bo-dang-chieu", 1),
-      getMoviesByType("phim-bo-hoan-thanh", 1),
-      getMoviesByType("phim-sap-chieu", 1),
-      getMoviesByType("subteam", 1),
-      getMoviesByType("phim-chieu-rap", 1),
+      getNewlyUpdatedMovies(1).catch((err) => {
+        console.error("Failed to fetch newly updated movies:", err);
+        return { items: [] };
+      }),
+      getMoviesByType("phim-le", 1).catch((err) => {
+        console.error("Failed to fetch phim-le:", err);
+        return { data: { items: [] } };
+      }),
+      getMoviesByType("phim-bo", 1).catch((err) => {
+        console.error("Failed to fetch phim-bo:", err);
+        return { data: { items: [] } };
+      }),
+      getMoviesByType("hoat-hinh", 1).catch((err) => {
+        console.error("Failed to fetch hoat-hinh:", err);
+        return { data: { items: [] } };
+      }),
+      getMoviesByType("tv-shows", 1).catch((err) => {
+        console.error("Failed to fetch tv-shows:", err);
+        return { data: { items: [] } };
+      }),
+      getMoviesByType("phim-vietsub", 1).catch((err) => {
+        console.error("Failed to fetch phim-vietsub:", err);
+        return { data: { items: [] } };
+      }),
+      getMoviesByType("phim-thuyet-minh", 1).catch((err) => {
+        console.error("Failed to fetch phim-thuyet-minh:", err);
+        return { data: { items: [] } };
+      }),
+      getMoviesByType("phim-long-tieng", 1).catch((err) => {
+        console.error("Failed to fetch phim-long-tieng:", err);
+        return { data: { items: [] } };
+      }),
+      getMoviesByType("phim-bo-dang-chieu", 1).catch((err) => {
+        console.error("Failed to fetch phim-bo-dang-chieu:", err);
+        return { data: { items: [] } };
+      }),
+      getMoviesByType("phim-bo-hoan-thanh", 1).catch((err) => {
+        console.error("Failed to fetch phim-bo-hoan-thanh:", err);
+        return { data: { items: [] } };
+      }),
+      getMoviesByType("phim-sap-chieu", 1).catch((err) => {
+        console.error("Failed to fetch phim-sap-chieu:", err);
+        return { data: { items: [] } };
+      }),
+      getMoviesByType("subteam", 1).catch((err) => {
+        console.error("Failed to fetch subteam:", err);
+        return { data: { items: [] } };
+      }),
+      getMoviesByType("phim-chieu-rap", 1).catch((err) => {
+        console.error("Failed to fetch phim-chieu-rap:", err);
+        return { data: { items: [] } };
+      }),
     ]);
 
     return {

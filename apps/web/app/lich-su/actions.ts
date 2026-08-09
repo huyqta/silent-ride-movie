@@ -1,21 +1,16 @@
-'use server'
-
-import { createServerDataSupabaseClient } from '@repo/database'
-import { revalidatePath } from 'next/cache'
+import { getSupabaseBrowserClient } from '@/lib/supabase-browser'
 import { watchHistorySchema, type WatchHistoryInput } from './schema'
 
 export async function updateWatchHistory(profileId: string, historyData: WatchHistoryInput) {
   if (!profileId) return
-  
-  // Validate data
+
   const validated = watchHistorySchema.safeParse(historyData)
   if (!validated.success) {
     console.error('Invalid history data:', validated.error.format())
     return
   }
-  
-  const data = validated.data
-  const supabase = createServerDataSupabaseClient()
+
+  const supabase = getSupabaseBrowserClient()
   if (!supabase) return
 
   // Verify profile exists
@@ -24,7 +19,7 @@ export async function updateWatchHistory(profileId: string, historyData: WatchHi
     .select('id')
     .eq('id', profileId)
     .maybeSingle()
-  
+
   if (!profile) return
 
   const { error } = await supabase
@@ -44,13 +39,12 @@ export async function updateWatchHistory(profileId: string, historyData: WatchHi
     })
 
   if (error) console.error('Failed to update watch history:', error)
-  
-  revalidatePath('/lich-su')
 }
 
 export async function getWatchHistory(profileId: string) {
   if (!profileId) return []
-  const supabase = createServerDataSupabaseClient()
+
+  const supabase = getSupabaseBrowserClient()
   if (!supabase) return []
 
   const { data } = await supabase
@@ -63,17 +57,17 @@ export async function getWatchHistory(profileId: string) {
 }
 
 export async function clearHistory(profileId: string) {
-    if (!profileId) return { error: 'Vui lòng chọn Profile' }
-    const supabase = createServerDataSupabaseClient()
-    if (!supabase) return { error: 'Database not configured' }
-  
-    const { error } = await supabase
-      .from('sr_watch_history')
-      .delete()
-      .eq('profile_id', profileId)
-  
-    if (error) return { error: error.message }
-    
-    revalidatePath('/lich-su')
-    return { success: true }
+  if (!profileId) return { error: 'Vui lòng chọn Profile' }
+
+  const supabase = getSupabaseBrowserClient()
+  if (!supabase) return { error: 'Database not configured' }
+
+  const { error } = await supabase
+    .from('sr_watch_history')
+    .delete()
+    .eq('profile_id', profileId)
+
+  if (error) return { error: error.message }
+
+  return { success: true }
 }

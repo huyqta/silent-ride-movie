@@ -11,14 +11,36 @@ interface HelpDialogProps {
 
 export default function HelpDialog({ isOpen, onClose }: HelpDialogProps) {
     const [mounted, setMounted] = useState(false);
+    const [movieSource, setMovieSource] = useState("ophim");
 
     useEffect(() => {
         setMounted(true);
     }, []);
 
+    useEffect(() => {
+        if (isOpen && typeof window !== "undefined") {
+            setMovieSource(localStorage.getItem("movie-source") || "ophim");
+        }
+    }, [isOpen]);
+
     if (!mounted) return null;
 
+    const sourceDetails: Record<string, { name: string; url: string }> = {
+        ophim: { name: "OPhim", url: "https://ophim17.cc" },
+        nguonc: { name: "Nguồn C", url: "https://phim.nguonc.com" },
+        kkphim: { name: "KKPhim", url: "https://kkphim.com" },
+        vsmov: { name: "VSMov", url: "https://vsmov.com" },
+    };
+    const currentSource = sourceDetails[movieSource] || sourceDetails.ophim;
+
     const sections = [
+        {
+            title: "Cấu hình API nguồn",
+            icon: Zap,
+            items: [
+                { key: currentSource.name, label: `Trang chủ nguồn: ${currentSource.url}` },
+            ]
+        },
         {
             title: "Phím tắt bàn phím",
             icon: Keyboard,
