@@ -6,6 +6,7 @@
     "dev": "turbo run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
+    "deploy": "pnpm --dir apps/web exec wrangler deploy",
     "update-db": "echo 'Syncing types...'",
     "setup": "sh scripts/setup-hooks.sh"
   },
