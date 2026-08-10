@@ -1,9 +1,10 @@
 import HeroBanner from "@/components/movie/HeroBanner";
 import MovieSlider from "@/components/movie/MovieSlider";
 import { HeroSkeleton } from "@/components/ui/Skeleton";
+import { cookies } from "next/headers";
 import { getNewlyUpdatedMovies, getMoviesByType } from "@/lib/api/unified";
 
-async function getHomeData() {
+async function getHomeData(source: string | undefined) {
   const [
     newMovies,
     singleMovies,
@@ -19,19 +20,19 @@ async function getHomeData() {
     subteam,
     chieuRap,
   ] = await Promise.all([
-    getNewlyUpdatedMovies(1).catch(() => ({ items: [] })),
-    getMoviesByType("phim-le", 1).catch(() => ({ data: { items: [] } })),
-    getMoviesByType("phim-bo", 1).catch(() => ({ data: { items: [] } })),
-    getMoviesByType("hoat-hinh", 1).catch(() => ({ data: { items: [] } })),
-    getMoviesByType("tv-shows", 1).catch(() => ({ data: { items: [] } })),
-    getMoviesByType("phim-vietsub", 1).catch(() => ({ data: { items: [] } })),
-    getMoviesByType("phim-thuyet-minh", 1).catch(() => ({ data: { items: [] } })),
-    getMoviesByType("phim-long-tieng", 1).catch(() => ({ data: { items: [] } })),
-    getMoviesByType("phim-bo-dang-chieu", 1).catch(() => ({ data: { items: [] } })),
-    getMoviesByType("phim-bo-hoan-thanh", 1).catch(() => ({ data: { items: [] } })),
-    getMoviesByType("phim-sap-chieu", 1).catch(() => ({ data: { items: [] } })),
-    getMoviesByType("subteam", 1).catch(() => ({ data: { items: [] } })),
-    getMoviesByType("phim-chieu-rap", 1).catch(() => ({ data: { items: [] } })),
+    getNewlyUpdatedMovies(1, source).catch(() => ({ items: [] })),
+    getMoviesByType("phim-le", 1, 24, source).catch(() => ({ data: { items: [] } })),
+    getMoviesByType("phim-bo", 1, 24, source).catch(() => ({ data: { items: [] } })),
+    getMoviesByType("hoat-hinh", 1, 24, source).catch(() => ({ data: { items: [] } })),
+    getMoviesByType("tv-shows", 1, 24, source).catch(() => ({ data: { items: [] } })),
+    getMoviesByType("phim-vietsub", 1, 24, source).catch(() => ({ data: { items: [] } })),
+    getMoviesByType("phim-thuyet-minh", 1, 24, source).catch(() => ({ data: { items: [] } })),
+    getMoviesByType("phim-long-tieng", 1, 24, source).catch(() => ({ data: { items: [] } })),
+    getMoviesByType("phim-bo-dang-chieu", 1, 24, source).catch(() => ({ data: { items: [] } })),
+    getMoviesByType("phim-bo-hoan-thanh", 1, 24, source).catch(() => ({ data: { items: [] } })),
+    getMoviesByType("phim-sap-chieu", 1, 24, source).catch(() => ({ data: { items: [] } })),
+    getMoviesByType("subteam", 1, 24, source).catch(() => ({ data: { items: [] } })),
+    getMoviesByType("phim-chieu-rap", 1, 24, source).catch(() => ({ data: { items: [] } })),
   ]);
 
   return {
@@ -52,7 +53,9 @@ async function getHomeData() {
 }
 
 export default async function HomePage() {
-  const data = await getHomeData();
+  const cookieStore = await cookies();
+  const source = cookieStore.get("movie-source")?.value;
+  const data = await getHomeData(source);
   const { newMovies } = data;
   const heroMovie = newMovies[0];
 

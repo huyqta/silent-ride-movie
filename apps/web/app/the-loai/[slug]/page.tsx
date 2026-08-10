@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { cookies } from "next/headers";
 import { getMoviesByGenre } from "@/lib/api/unified";
 import GenrePageClient from "./client";
 import SplashScreen from "@/components/ui/SplashScreen";
@@ -15,8 +16,10 @@ interface Props {
 export default async function GenrePage({ params, searchParams }: Props) {
     const resolvedParams = await params;
     const resolvedSearchParams = await searchParams;
+    const cookieStore = await cookies();
+    const source = cookieStore.get("movie-source")?.value;
     const currentPage = Math.max(1, Number.parseInt(resolvedSearchParams.page || "1", 10) || 1);
-    const initialData = await getMoviesByGenre(resolvedParams.slug, currentPage).catch(() => ({ data: { items: [] } }));
+    const initialData = await getMoviesByGenre(resolvedParams.slug, currentPage, source).catch(() => ({ data: { items: [] } }));
 
     return (
         <Suspense fallback={<SplashScreen />}>

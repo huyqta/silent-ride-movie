@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { getMoviesByType } from "@/lib/api/unified";
 import MovieListPageClient from "./client";
@@ -48,13 +49,15 @@ const typeNames: Record<string, string> = {
 export default async function MovieListPage({ params, searchParams }: Props) {
     const resolvedParams = await params;
     const resolvedSearchParams = await searchParams;
+    const cookieStore = await cookies();
+    const source = cookieStore.get("movie-source")?.value;
     const currentPage = Math.max(1, Number.parseInt(resolvedSearchParams.page || "1", 10) || 1);
 
     if (!typeNames[resolvedParams.type]) {
         notFound();
     }
 
-    const initialData = await getMoviesByType(resolvedParams.type, currentPage).catch(() => ({ data: { items: [] } }));
+    const initialData = await getMoviesByType(resolvedParams.type, currentPage, 24, source).catch(() => ({ data: { items: [] } }));
 
     return (
         <Suspense fallback={<SplashScreen />}>

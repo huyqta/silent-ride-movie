@@ -123,32 +123,39 @@ export const getSource = (): Source => {
     return "ophim";
 };
 
-export async function getNewlyUpdatedMovies(page: number = 1) {
-    const source = getSource();
+export function normalizeSource(sourceOverride?: Source | string | null): Source {
+    if (sourceOverride === "ophim" || sourceOverride === "nguonc" || sourceOverride === "kkphim" || sourceOverride === "vsmov") {
+        return sourceOverride;
+    }
+    return getSource();
+}
+
+export async function getNewlyUpdatedMovies(page: number = 1, sourceOverride?: Source | string | null) {
+    const source = normalizeSource(sourceOverride);
     if (source === "nguonc") return nguonc.getNewlyUpdatedMoviesNguonC(page);
     if (source === "kkphim") return kkphim.getNewlyUpdatedMoviesKKPhim(page);
     if (source === "vsmov") return vsmov.getNewlyUpdatedMoviesVSMov(page);
     return ophim.getNewlyUpdatedMovies(page);
 }
 
-export async function getMoviesByType(type: string, page: number = 1, limit: number = 24) {
-    const source = getSource();
+export async function getMoviesByType(type: string, page: number = 1, limit: number = 24, sourceOverride?: Source | string | null) {
+    const source = normalizeSource(sourceOverride);
     if (source === "nguonc") return nguonc.getMoviesByTypeNguonC(type, page);
     if (source === "kkphim") return kkphim.getMoviesByTypeKKPhim(type, page, limit);
     if (source === "vsmov") return vsmov.getMoviesByTypeVSMov(type, page, limit);
     return ophim.getMoviesByType(type, page, limit);
 }
 
-export async function getMoviesByGenre(slug: string, page: number = 1) {
-    const source = getSource();
+export async function getMoviesByGenre(slug: string, page: number = 1, sourceOverride?: Source | string | null) {
+    const source = normalizeSource(sourceOverride);
     if (source === "nguonc") return nguonc.getMoviesByGenreNguonC(slug, page);
     if (source === "kkphim") return kkphim.getMoviesByGenreKKPhim(slug, page);
     if (source === "vsmov") return vsmov.getMoviesByGenreVSMov(slug, page);
     return ophim.getMoviesByGenre(slug, page);
 }
 
-export async function getMoviesByCountry(slug: string, page: number = 1) {
-    const source = getSource();
+export async function getMoviesByCountry(slug: string, page: number = 1, sourceOverride?: Source | string | null) {
+    const source = normalizeSource(sourceOverride);
     if (source === "nguonc") return nguonc.getMoviesByCountryNguonC(slug, page);
     if (source === "kkphim") return kkphim.getMoviesByCountryKKPhim(slug, page);
     if (source === "vsmov") return vsmov.getMoviesByCountryVSMov(slug, page);
@@ -304,12 +311,7 @@ export async function getMovieDetail(
     slug: string,
     sourceOverride?: "ophim" | "nguonc" | "kkphim" | "vsmov" | string | null
 ) {
-    const source = sourceOverride === "ophim"
-        || sourceOverride === "nguonc"
-        || sourceOverride === "kkphim"
-        || sourceOverride === "vsmov"
-        ? sourceOverride
-        : getSource();
+    const source = normalizeSource(sourceOverride);
 
     return getMovieDetailBySource(slug, source);
 }
