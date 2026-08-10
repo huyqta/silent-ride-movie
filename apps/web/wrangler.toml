@@ -1,12 +1,7 @@
 name = "silent-ride"
-main = ".open-next/worker.js"
-compatibility_date = "2024-12-01"
-compatibility_flags = ["nodejs_compat", "global_fetch_strictly_public"]
-assets = { directory = ".open-next/assets", binding = "ASSETS" }
+compatibility_date = "2026-08-10"
 
-[[services]]
-binding = "WORKER_SELF_REFERENCE"
-service = "silent-ride"
-
-[vars]
-# Thêm các biến môi trường từ .env vào đây nếu cần
+[assets]
+directory = "./out"
+html_handling = "auto-trailing-slash"
+not_found_handling = "single-page-application"
