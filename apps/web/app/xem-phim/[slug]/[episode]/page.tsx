@@ -4,7 +4,8 @@ import { use } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight, Home } from "lucide-react";
-import { getMovieDetail, getMoviePeoples, getMovieDetailNguonC, getMovieDetailPhimApi } from "@/lib/api/ophim";
+import { getMovieDetailD1 } from "@/lib/api/d1";
+import { getMoviePeoples, getMovieDetailNguonC, getMovieDetailPhimApi } from "@/lib/api/ophim";
 import VideoPlayer from "./VideoPlayer";
 import EpisodeSelector from "./EpisodeSelector";
 import MovieInfoDetails from "@/components/movie/MovieInfoDetails";
@@ -23,7 +24,7 @@ export default function WatchPage({ params, searchParams }: Props) {
 
     const { data: watchData, loading } = useMovieData(`watch-${slug}`, async () => {
         const [d, p, n, pa] = await Promise.all([
-            getMovieDetail(slug),
+            getMovieDetailD1(slug),
             getMoviePeoples(slug).catch(() => null),
             getMovieDetailNguonC(slug).catch(() => null),
             getMovieDetailPhimApi(slug).catch(() => null)

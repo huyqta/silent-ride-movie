@@ -5,7 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Play, Calendar, Clock, Globe, Star } from "lucide-react";
-import { getMovieDetail, getImageUrl } from "@/lib/api/ophim";
+import { getMovieDetailD1 } from "@/lib/api/d1";
+import { getImageUrl } from "@/lib/api/ophim";
 import FavoriteButton from "./FavoriteButton";
 import EpisodeList from "./EpisodeList";
 import SplashScreen from "@/components/ui/SplashScreen";
@@ -20,7 +21,7 @@ export default function MovieDetailPage({ params }: Props) {
     
     const { data, loading } = useMovieData(
         `movie-detail-${slug}`,
-        () => getMovieDetail(slug)
+        () => getMovieDetailD1(slug)
     );
 
     if (loading) {
