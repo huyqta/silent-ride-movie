@@ -89,7 +89,7 @@ export default function SearchPage() {
 
     const visibleCount = results
         ? SOURCES.filter((s) => isSourceVisible(s.key))
-              .reduce((sum, s) => sum + (results[s.key]?.length || 0), 0)
+            .reduce((sum, s) => sum + (results[s.key]?.length || 0), 0)
         : 0;
 
     return (
@@ -124,19 +124,17 @@ export default function SearchPage() {
                                         key={s.key}
                                         onClick={() => toggleSource(s.key)}
                                         title={isActive ? `Ẩn kết quả từ ${s.label}` : `Hiện kết quả từ ${s.label}`}
-                                        className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all duration-200 ${
-                                            isActive
-                                                ? "bg-primary border-primary text-white shadow-sm"
-                                                : "bg-transparent border-border text-foreground-muted opacity-50"
-                                        }`}
+                                        className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all duration-200 ${isActive
+                                            ? "bg-primary border-primary text-white shadow-sm"
+                                            : "bg-transparent border-border text-foreground-muted opacity-50"
+                                            }`}
                                     >
                                         {s.label}
                                         <span
-                                            className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${
-                                                isActive
-                                                    ? "bg-white/20 text-white"
-                                                    : "bg-background-secondary text-foreground-muted"
-                                            }`}
+                                            className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${isActive
+                                                ? "bg-white/20 text-white"
+                                                : "bg-background-secondary text-foreground-muted"
+                                                }`}
                                         >
                                             {count}
                                         </span>
@@ -186,6 +184,7 @@ export default function SearchPage() {
                                     </section>
                                 );
                             })}
+
                         </div>
                     </>
                 ) : null

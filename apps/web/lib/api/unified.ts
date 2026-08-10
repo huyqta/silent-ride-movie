@@ -4,6 +4,117 @@ import * as kkphim from "./kkphim";
 import * as vsmov from "./vsmov";
 
 type Source = "ophim" | "nguonc" | "kkphim" | "vsmov";
+type HeaderItem = { name: string; slug: string };
+
+const DEFAULT_GENRE_FALLBACK = "https://phimapi.com/the-loai";
+const DEFAULT_COUNTRY_FALLBACK = "https://ophim1.com/v1/api/quoc-gia";
+
+const SOURCE_MOVIE_TYPES: Record<Source, HeaderItem[]> = {
+    ophim: [
+        { name: "Hoạt Hình", slug: "hoat-hinh" },
+        { name: "TV Shows", slug: "tv-shows" },
+        { name: "Phim Vietsub", slug: "phim-vietsub" },
+        // { name: "Thuyết Minh", slug: "phim-thuyet-minh" },
+        // { name: "Lồng Tiếng", slug: "phim-long-tieng" },
+        { name: "Chiếu Rạp", slug: "phim-chieu-rap" },
+        { name: "Subteam", slug: "subteam" },
+    ],
+    nguonc: [
+        { name: "TV Shows", slug: "tv-shows" },
+        { name: "Đang Chiếu", slug: "dang-chieu" },
+    ],
+    kkphim: [
+        { name: "Hoạt Hình", slug: "hoat-hinh" },
+        { name: "TV Shows", slug: "tv-shows" },
+        { name: "Phim Vietsub", slug: "phim-vietsub" },
+        { name: "Thuyết Minh", slug: "phim-thuyet-minh" },
+        { name: "Lồng Tiếng", slug: "phim-long-tieng" },
+        { name: "Chiếu Rạp", slug: "phim-chieu-rap" },
+        { name: "Subteam", slug: "subteam" },
+        { name: "Phim Sắp Chiếu", slug: "phim-sap-chieu" },
+    ],
+    vsmov: [
+        { name: "Thuyết Minh", slug: "phim-thuyet-minh" },
+        { name: "Lồng Tiếng", slug: "phim-long-tieng" },
+    ],
+};
+
+const ALL_SOURCE_MOVIE_TYPES: HeaderItem[] = [
+    { name: "Phim Lẻ", slug: "phim-le" },
+    { name: "Phim Bộ", slug: "phim-bo" },
+    { name: "Phim Mới", slug: "phim-moi" },
+    ...SOURCE_MOVIE_TYPES.ophim,
+    ...SOURCE_MOVIE_TYPES.nguonc,
+    ...SOURCE_MOVIE_TYPES.kkphim,
+    ...SOURCE_MOVIE_TYPES.vsmov,
+    { name: "Phim Bộ Đang Chiếu", slug: "phim-bo-dang-chieu" },
+    { name: "Phim Bộ Hoàn Thành", slug: "phim-bo-hoan-thanh" },
+];
+
+function dedupeItems(items: HeaderItem[]) {
+    const uniqueItems = new Map<string, HeaderItem>();
+
+    items.forEach((item) => {
+        const slug = item?.slug?.trim();
+        const name = item?.name?.trim();
+        if (!slug || !name) return;
+
+        const key = slug.toLowerCase();
+        if (!uniqueItems.has(key)) {
+            uniqueItems.set(key, { slug, name });
+        }
+    });
+
+    return Array.from(uniqueItems.values()).sort((a, b) => a.name.localeCompare(b.name, "vi"));
+}
+
+function normalizeSearchText(value: unknown) {
+    return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/đ/g, "d")
+        .replace(/Đ/g, "D")
+        .toLowerCase()
+        .trim();
+}
+
+async function fetchHeaderCollection(url: string, stripAdultGenre: boolean = false) {
+    const response = await fetch(url, { next: { revalidate: 86400 } });
+    if (!response.ok) {
+        throw new Error(`Failed to fetch header collection from ${url}`);
+    }
+
+    const data = await response.json();
+    const items = Array.isArray(data?.data?.items)
+        ? data.data.items
+        : Array.isArray(data?.items)
+            ? data.items
+            : [];
+
+    if (items.length === 0) {
+        throw new Error(`Header collection returned 0 items from ${url}`);
+    }
+
+    const normalizedItems = items
+        .map((item: any) => ({
+            name: item?.name ?? "",
+            slug: item?.slug ?? "",
+        }))
+        .filter((item: HeaderItem) => item.name && item.slug)
+        .filter((item: HeaderItem) => !stripAdultGenre || item.slug !== "phim-18");
+
+    if (normalizedItems.length === 0) {
+        throw new Error(`Header collection normalized to 0 items from ${url}`);
+    }
+
+    return {
+        ...data,
+        data: {
+            ...(data?.data ?? {}),
+            items: normalizedItems,
+        },
+    };
+}
 
 export const getSource = (): Source => {
     if (typeof window !== "undefined") {
@@ -64,10 +175,10 @@ export async function searchMoviesAllSources(q: string, page: number = 1): Promi
         (items || []).map((item: any) => ({ ...item, _source: source }));
 
     return {
-        ophim:  tag(opData?.data?.items, "ophim"),
+        ophim: tag(opData?.data?.items, "ophim"),
         nguonc: tag(ncData?.data?.items, "nguonc"),
         kkphim: tag(kkData?.data?.items, "kkphim"),
-        vsmov:  tag(vsData?.data?.items, "vsmov"),
+        vsmov: tag(vsData?.data?.items, "vsmov"),
     };
 }
 
@@ -133,7 +244,7 @@ export async function searchMovies(q: string, page: number = 1) {
 function mapNguonCDetailToOPhim(ncData: any) {
     if (!ncData || !ncData.movie) return null;
     const movie = ncData.movie;
-    
+
     let categories: any[] = [];
     if (movie.category) {
         if (Array.isArray(movie.category)) {
@@ -191,12 +302,18 @@ function mapNguonCDetailToOPhim(ncData: any) {
 
 export async function getMovieDetail(slug: string) {
     const source = getSource();
-    
+    return getMovieDetailBySource(slug, source);
+}
+
+export async function getMovieDetailBySource(
+    slug: string,
+    source: "ophim" | "nguonc" | "kkphim" | "vsmov"
+) {
     if (source === "nguonc") {
         const data = await ophim.getMovieDetailNguonC(slug);
         return mapNguonCDetailToOPhim(data);
     }
-    
+
     if (source === "kkphim") {
         const data = await ophim.getMovieDetailPhimApi(slug);
         if (data && data.movie) {
@@ -211,11 +328,11 @@ export async function getMovieDetail(slug: string) {
         }
         return data;
     }
-    
+
     if (source === "vsmov") {
         return vsmov.getMovieDetailVSMov(slug);
     }
-    
+
     return ophim.getMovieDetail(slug);
 }
 
@@ -262,7 +379,7 @@ export async function getUrlCountBySource(
 export function getImageUrl(path: string, source?: "ophim" | "nguonc" | "kkphim" | "vsmov"): string {
     if (!path) return "/placeholder.jpg";
     if (path.startsWith("http")) return path;
-    
+
     const activeSource = source || getSource();
     if (activeSource === "kkphim") {
         return `https://phimimg.com/${path}`;
@@ -279,33 +396,200 @@ export async function advancedSearch(params: {
     page?: number;
     limit?: number;
 }) {
+    const page = params.page || 1;
+    const limit = params.limit || 24;
+    const keyword = (params.keyword || "").trim();
+    const normalizedKeyword = normalizeSearchText(keyword);
+    const categories = Array.isArray(params.category) ? params.category : params.category ? [params.category] : [];
+    const countries = Array.isArray(params.country) ? params.country : params.country ? [params.country] : [];
+    const types = Array.isArray(params.type) ? params.type : params.type ? [params.type] : [];
+    const years = Array.isArray(params.year) ? params.year : params.year ? [params.year] : [];
+
+    const toItems = (result: any) => result?.data?.items || result?.items || [];
+
+    const fetchBySource = async (source: Source) => {
+        const requests: Promise<any>[] = [];
+
+        if (types.length > 0) {
+            for (const type of types) {
+                if (source === "ophim") requests.push(ophim.getMoviesByType(type, page, limit));
+                if (source === "nguonc") requests.push(nguonc.getMoviesByTypeNguonC(type, page));
+                if (source === "kkphim") requests.push(kkphim.getMoviesByTypeKKPhim(type, page, limit));
+                if (source === "vsmov") requests.push(vsmov.getMoviesByTypeVSMov(type, page, limit));
+            }
+        } else if (categories.length > 0) {
+            for (const category of categories) {
+                if (source === "ophim") requests.push(ophim.getMoviesByGenre(category, page));
+                if (source === "nguonc") requests.push(nguonc.getMoviesByGenreNguonC(category, page));
+                if (source === "kkphim") requests.push(kkphim.getMoviesByGenreKKPhim(category, page));
+                if (source === "vsmov") requests.push(vsmov.getMoviesByGenreVSMov(category, page));
+            }
+        } else if (countries.length > 0) {
+            for (const country of countries) {
+                if (source === "ophim") requests.push(ophim.getMoviesByCountry(country, page));
+                if (source === "nguonc") requests.push(nguonc.getMoviesByCountryNguonC(country, page));
+                if (source === "kkphim") requests.push(kkphim.getMoviesByCountryKKPhim(country, page));
+                if (source === "vsmov") requests.push(vsmov.getMoviesByCountryVSMov(country, page));
+            }
+        } else if (keyword) {
+            if (source === "ophim") requests.push(ophim.searchMovies(keyword, page));
+            if (source === "nguonc") requests.push(nguonc.searchMoviesNguonC(keyword, page));
+            if (source === "kkphim") requests.push(kkphim.searchMoviesKKPhim(keyword, page));
+            if (source === "vsmov") requests.push(vsmov.searchMoviesVSMov(keyword, page));
+        } else {
+            if (source === "ophim") requests.push(ophim.getNewlyUpdatedMovies(page));
+            if (source === "nguonc") requests.push(nguonc.getNewlyUpdatedMoviesNguonC(page));
+            if (source === "kkphim") requests.push(kkphim.getNewlyUpdatedMoviesKKPhim(page));
+            if (source === "vsmov") requests.push(vsmov.getNewlyUpdatedMoviesVSMov(page));
+        }
+
+        const results = await Promise.all(requests.map((request) => request.catch(() => ({ data: { items: [] }, items: [] }))));
+
+        return results.flatMap((result) =>
+            toItems(result).map((item: any) => ({
+                ...item,
+                _source: item?._source || source,
+            }))
+        );
+    };
+
+    const [ophimItems, nguoncItems, kkphimItems, vsmovItems] = await Promise.all([
+        fetchBySource("ophim"),
+        fetchBySource("nguonc"),
+        fetchBySource("kkphim"),
+        fetchBySource("vsmov"),
+    ]);
+
+    const allItems = [...ophimItems, ...nguoncItems, ...kkphimItems, ...vsmovItems];
+
+    const filteredItems = allItems.filter((item: any) => {
+        const itemName = normalizeSearchText(`${item?.name || ""} ${item?.origin_name || ""}`);
+        const itemYear = String(item?.year || "");
+        const itemCategories = Array.isArray(item?.category) ? item.category : [];
+        const itemCountries = Array.isArray(item?.country) ? item.country : [];
+
+        const keywordMatch = !normalizedKeyword || itemName.includes(normalizedKeyword);
+        const yearMatch = years.length === 0 || years.includes(itemYear);
+        const categoryMatch =
+            categories.length === 0 ||
+            itemCategories.some((category: any) => categories.includes(category?.slug) || categories.includes(category?.name));
+        const countryMatch =
+            countries.length === 0 ||
+            itemCountries.some((country: any) => countries.includes(country?.slug) || countries.includes(country?.name));
+
+        return keywordMatch && yearMatch && categoryMatch && countryMatch;
+    });
+
+    const uniqueItemsMap = new Map<string, any>();
+    filteredItems.forEach((item: any) => {
+        const key = `${item?._source || "unknown"}:${item?.slug || item?._id || item?.name}`;
+        if (!uniqueItemsMap.has(key)) {
+            uniqueItemsMap.set(key, item);
+        }
+    });
+
+    const uniqueItems = Array.from(uniqueItemsMap.values());
+
+    return {
+        data: {
+            items: uniqueItems,
+            params: {
+                pagination: {
+                    totalItems: uniqueItems.length,
+                    totalItemsPerPage: limit,
+                    currentPage: page,
+                    totalPages: Math.ceil(uniqueItems.length / limit) || 1,
+                },
+            },
+        },
+    };
+}
+
+export async function getCategories() {
     const source = getSource();
-    if (source === "nguonc") {
-        if (params.keyword) return nguonc.searchMoviesNguonC(params.keyword, params.page);
-        if (params.type && !Array.isArray(params.type)) return nguonc.getMoviesByTypeNguonC(params.type, params.page);
-        if (params.category && !Array.isArray(params.category)) return nguonc.getMoviesByGenreNguonC(params.category, params.page);
-        if (params.country && !Array.isArray(params.country)) return nguonc.getMoviesByCountryNguonC(params.country, params.page);
-        return nguonc.getNewlyUpdatedMoviesNguonC(params.page);
+
+    try {
+        if (source === "ophim") {
+            return await fetchHeaderCollection("https://ophim1.com/v1/api/the-loai", true);
+        }
+        if (source === "nguonc") {
+            return await fetchHeaderCollection("https://phimapi.com/the-loai", true);
+        }
+        if (source === "kkphim") {
+            return await fetchHeaderCollection("https://phimapi.com/the-loai", true);
+        }
+        return await fetchHeaderCollection("https://vsmov.com/api/the-loai", true);
+    } catch (error) {
+        console.warn(`Falling back genres to ${DEFAULT_GENRE_FALLBACK}:`, error);
+        return fetchHeaderCollection(DEFAULT_GENRE_FALLBACK, true);
     }
-    if (source === "kkphim") {
-        if (params.keyword) return kkphim.searchMoviesKKPhim(params.keyword, params.page);
-        if (params.type && !Array.isArray(params.type)) return kkphim.getMoviesByTypeKKPhim(params.type, params.page, params.limit);
-        if (params.category && !Array.isArray(params.category)) return kkphim.getMoviesByGenreKKPhim(params.category, params.page);
-        if (params.country && !Array.isArray(params.country)) return kkphim.getMoviesByCountryKKPhim(params.country, params.page);
-        return kkphim.getNewlyUpdatedMoviesKKPhim(params.page);
+}
+
+export async function getCountries() {
+    const source = getSource();
+
+    try {
+        if (source === "ophim") {
+            return await fetchHeaderCollection("https://ophim1.com/v1/api/quoc-gia");
+        }
+        if (source === "nguonc") {
+            return await fetchHeaderCollection("https://ophim1.com/v1/api/quoc-gia");
+        }
+        if (source === "kkphim") {
+            return await fetchHeaderCollection("https://phimapi.com/quoc-gia");
+        }
+        return await fetchHeaderCollection("https://vsmov.com/api/quoc-gia");
+    } catch (error) {
+        console.warn(`Falling back countries to ${DEFAULT_COUNTRY_FALLBACK}:`, error);
+        return fetchHeaderCollection(DEFAULT_COUNTRY_FALLBACK);
     }
-    if (source === "vsmov") {
-        if (params.keyword) return vsmov.searchMoviesVSMov(params.keyword, params.page);
-        if (params.type && !Array.isArray(params.type)) return vsmov.getMoviesByTypeVSMov(params.type, params.page, params.limit);
-        if (params.category && !Array.isArray(params.category)) return vsmov.getMoviesByGenreVSMov(params.category, params.page);
-        if (params.country && !Array.isArray(params.country)) return vsmov.getMoviesByCountryVSMov(params.country, params.page);
-        return vsmov.getNewlyUpdatedMoviesVSMov(params.page);
-    }
-    return ophim.advancedSearch(params);
+}
+
+export function getHeaderMovieTypes(source?: Source) {
+    return SOURCE_MOVIE_TYPES[source || getSource()] || [];
+}
+
+export async function getAllCategories() {
+    const results = await Promise.allSettled([
+        fetchHeaderCollection("https://ophim1.com/v1/api/the-loai", true),
+        fetchHeaderCollection("https://phimapi.com/the-loai", true),
+        fetchHeaderCollection("https://vsmov.com/api/the-loai", true),
+    ]);
+
+    const items = results.flatMap((result) =>
+        result.status === "fulfilled" ? (result.value?.data?.items || []) : []
+    );
+
+    return {
+        data: {
+            items: dedupeItems(items),
+        },
+    };
+}
+
+export async function getAllCountries() {
+    const results = await Promise.allSettled([
+        fetchHeaderCollection("https://ophim1.com/v1/api/quoc-gia"),
+        fetchHeaderCollection("https://phimapi.com/quoc-gia"),
+        fetchHeaderCollection("https://vsmov.com/api/quoc-gia"),
+    ]);
+
+    const items = results.flatMap((result) =>
+        result.status === "fulfilled" ? (result.value?.data?.items || []) : []
+    );
+
+    return {
+        data: {
+            items: dedupeItems(items),
+        },
+    };
+}
+
+export function getAllMovieTypes() {
+    return dedupeItems(ALL_SOURCE_MOVIE_TYPES);
 }
 
 // Delegate these specifically to ophim or nguonC as needed.
 // These are mostly used for details which are source-dependent already via the slugs.
-export { getMoviePeoples, getMovieDetailNguonC, getMovieDetailPhimApi, getCategories, getCountries, movieTypes } from "./ophim";
+export { getMoviePeoples, getMovieDetailNguonC, getMovieDetailPhimApi, movieTypes } from "./ophim";
 export { getMovieDetailVSMov } from "./vsmov";
-

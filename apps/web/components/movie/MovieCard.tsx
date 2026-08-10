@@ -95,6 +95,20 @@ export default function MovieCard({ movie, index = 0, showProgress = true, urlCo
         }
     };
 
+    const handleMovieClick = () => {
+        if (typeof window === "undefined" || !movie._source) return;
+
+        localStorage.setItem("movie-source", movie._source);
+        document.cookie = `movie-source=${movie._source}; path=/; max-age=31536000; SameSite=Lax`;
+        window.dispatchEvent(
+            new StorageEvent("storage", { key: "movie-source", newValue: movie._source })
+        );
+    };
+
+    const movieHref = movie._source
+        ? `/phim/${movie.slug}?source=${movie._source}`
+        : `/phim/${movie.slug}`;
+
     return (
         <motion.div
             ref={containerRef}
@@ -103,7 +117,12 @@ export default function MovieCard({ movie, index = 0, showProgress = true, urlCo
             transition={{ duration: 0.3, delay: index * 0.05 }}
             className="group relative"
         >
-            <Link href={`/phim/${movie.slug}`} prefetch={false} className="block">
+            <Link
+                href={movieHref}
+                prefetch={false}
+                className="block"
+                onClick={handleMovieClick}
+            >
                 <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-background-secondary">
                     {/* Thumbnail */}
                     <Image

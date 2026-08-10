@@ -30,6 +30,13 @@ const filterNSFW = (movies: Movie[]) => {
     );
 };
 
+const NGUONC_TYPE_ENDPOINTS: Record<string, string> = {
+    "phim-le": "phim-le",
+    "phim-bo": "phim-bo",
+    "tv-shows": "tv-shows",
+    "dang-chieu": "dang-chieu",
+};
+
 export async function getNewlyUpdatedMoviesNguonC(page: number = 1) {
     const response = await fetch(`${NGUONC_API}/films/phim-moi-cap-nhat?page=${page}`, {
         next: { revalidate: 3600 },
@@ -47,10 +54,9 @@ export async function getNewlyUpdatedMoviesNguonC(page: number = 1) {
 }
 
 export async function getMoviesByTypeNguonC(type: string, page: number = 1) {
-    // NguonC categories: phim-sap-chieu, phim-dang-chieu, phim-tron-bo, phim-le, phim-bo, phim-viet-nam
-    let slug = type;
-    if (type === 'phim-moi') slug = 'phim-moi-cap-nhat';
-    
+    const slug = NGUONC_TYPE_ENDPOINTS[type];
+    if (!slug) return { data: { items: [] } };
+
     const response = await fetch(`${NGUONC_API}/films/danh-sach/${slug}?page=${page}`, {
         next: { revalidate: 3600 },
     });

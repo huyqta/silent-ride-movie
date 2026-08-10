@@ -24,38 +24,40 @@ import {
     Calendar,
     Ticket,
     Users,
-    Globe,
     Layers,
     HelpCircle,
     UserCircle,
 } from "lucide-react";
 import { useStore } from "@/lib/store/useStore";
 import { useProfileStore } from "@/lib/store/useProfileStore";
-import { getCategories, getCountries } from "@/lib/api/ophim";
+import { getCategories, getCountries, getHeaderMovieTypes } from "@/lib/api/unified";
 import HelpDialog from "@/components/ui/HelpDialog";
 import { usePathname } from "next/navigation";
 
 const navItems = [
     { name: "Phim Lẻ", href: "/danh-sach/phim-le", icon: Film },
     { name: "Phim Bộ", href: "/danh-sach/phim-bo", icon: Tv },
-    { name: "Hoạt Hình", href: "/danh-sach/hoat-hinh", icon: Gamepad2 },
+    // { name: "Hoạt Hình", href: "/danh-sach/hoat-hinh", icon: Gamepad2 },
     { name: "Tìm phim", href: "/tim-kiem-nang-cao", icon: Search },
-];
-
-const exploreItems = [
-    { name: "Phim Vietsub", href: "/danh-sach/phim-vietsub", icon: Languages },
-    { name: "Thuyết Minh", href: "/danh-sach/phim-thuyet-minh", icon: Mic2 },
-    { name: "Lồng Tiếng", href: "/danh-sach/phim-long-tieng", icon: Volume2 },
-    { name: "Bộ Đang Chiếu", href: "/danh-sach/phim-bo-dang-chieu", icon: PlayCircle },
-    { name: "Bộ Hoàn Thành", href: "/danh-sach/phim-bo-hoan-thanh", icon: CheckCircle2 },
-    { name: "Sắp Chiếu", href: "/danh-sach/phim-sap-chieu", icon: Calendar },
-    { name: "Chiếu Rạp", href: "/danh-sach/phim-chieu-rap", icon: Ticket },
-    { name: "Subteam", href: "/danh-sach/subteam", icon: Users },
 ];
 
 interface HeaderProps {
     initialSource?: 'ophim' | 'nguonc' | 'kkphim' | 'vsmov';
 }
+
+const typeIcons: Record<string, any> = {
+    "hoat-hinh": Gamepad2,
+    "tv-shows": Monitor,
+    "phim-vietsub": Languages,
+    "phim-thuyet-minh": Mic2,
+    "phim-long-tieng": Volume2,
+    "phim-bo-dang-chieu": PlayCircle,
+    "phim-bo-hoan-thanh": CheckCircle2,
+    "phim-sap-chieu": Calendar,
+    "phim-chieu-rap": Ticket,
+    "subteam": Users,
+    "dang-chieu": PlayCircle,
+};
 
 export default function Header({ initialSource = 'ophim' }: HeaderProps) {
     const router = useRouter();
@@ -80,6 +82,11 @@ export default function Header({ initialSource = 'ophim' }: HeaderProps) {
 
     const [genres, setGenres] = useState<any[]>([]);
     const [countries, setCountries] = useState<any[]>([]);
+    const exploreItems = getHeaderMovieTypes(movieSource).map((item) => ({
+        ...item,
+        href: `/danh-sach/${item.slug}`,
+        icon: typeIcons[item.slug] || Layers,
+    }));
 
     const [searchQuery, setSearchQuery] = useState("");
     const searchInputRef = useRef<HTMLInputElement>(null);
@@ -97,10 +104,12 @@ export default function Header({ initialSource = 'ophim' }: HeaderProps) {
                 setCountries(cData?.data?.items || []);
             } catch (error) {
                 console.error("Failed to fetch header data:", error);
+                setGenres([]);
+                setCountries([]);
             }
         };
         fetchData();
-    }, []);
+    }, [movieSource]);
 
     // Sync source with cookie for SSR on mount
     useEffect(() => {
@@ -111,10 +120,10 @@ export default function Header({ initialSource = 'ophim' }: HeaderProps) {
     }, [mounted, movieSource]);
 
     const sourceConfig = {
-        ophim:  { hex: '#E50914', hoverHex: '#b20710', name: 'OPhim' },
+        ophim: { hex: '#E50914', hoverHex: '#b20710', name: 'OPhim' },
         nguonc: { hex: '#0063E5', hoverHex: '#004db3', name: 'NguonPhim' },
         kkphim: { hex: '#F5C518', hoverHex: '#d4a800', name: 'KKPhim' },
-        vsmov:  { hex: '#6366F1', hoverHex: '#4f46e5', name: 'VSMov' },
+        vsmov: { hex: '#109449', hoverHex: '#0c7438', name: 'VSMov' },
     } as const;
     const activeColor = sourceConfig[movieSource].hex;
     const activeHoverColor = sourceConfig[movieSource].hoverHex;
@@ -270,15 +279,15 @@ export default function Header({ initialSource = 'ophim' }: HeaderProps) {
                                         >
                                             <div className="grid grid-cols-3 gap-1 max-h-[60vh] overflow-y-auto scrollbar-hide">
                                                 {genres.map((genre) => (
-                                    <Link
-                                        key={genre.slug}
-                                        href={`/the-loai/${genre.slug}`}
-                                        prefetch={false}
-                                        onClick={() => setActiveMenu(null)}
-                                        className="px-3 py-2 text-xs text-foreground-secondary hover:text-primary hover:bg-white/5 rounded-lg transition-colors"
-                                    >
-                                        {genre.name}
-                                    </Link>
+                                                    <Link
+                                                        key={genre.slug}
+                                                        href={`/the-loai/${genre.slug}`}
+                                                        prefetch={false}
+                                                        onClick={() => setActiveMenu(null)}
+                                                        className="px-3 py-2 text-xs text-foreground-secondary hover:text-primary hover:bg-white/5 rounded-lg transition-colors"
+                                                    >
+                                                        {genre.name}
+                                                    </Link>
                                                 ))}
                                             </div>
                                         </motion.div>

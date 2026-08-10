@@ -13,6 +13,7 @@ const typeNames: Record<string, string> = {
     "phim-le": "Phim Lẻ",
     "tv-shows": "TV Shows",
     "hoat-hinh": "Hoạt Hình",
+    "dang-chieu": "Đang Chiếu",
     "phim-vietsub": "Phim Vietsub",
     "phim-thuyet-minh": "Phim Thuyết Minh",
     "phim-long-tieng": "Phim Lồng Tiếng",

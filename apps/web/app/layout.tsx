@@ -53,7 +53,7 @@ export default function RootLayout({
                     ophim:  { hex: '#E50914', hoverHex: '#b20710' },
                     nguonc: { hex: '#0063E5', hoverHex: '#004db3' },
                     kkphim: { hex: '#F5C518', hoverHex: '#d4a800' },
-                    vsmov:  { hex: '#6366F1', hoverHex: '#4f46e5' }
+                    vsmov:  { hex: '#109449', hoverHex: '#0c7438' }
                   }[source] || { hex: '#E50914', hoverHex: '#b20710' };
                   var primaryText = source === 'kkphim' ? '#000000' : '#ffffff';
                   document.documentElement.style.setProperty('--primary', config.hex);

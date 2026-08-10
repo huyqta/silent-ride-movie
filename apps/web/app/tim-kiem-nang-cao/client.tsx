@@ -2,11 +2,37 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { getCategories, getCountries, movieTypes, advancedSearch } from "@/lib/api/unified";
+import { getAllCategories, getAllCountries, getAllMovieTypes, advancedSearch } from "@/lib/api/unified";
 import MovieGrid from "@/components/movie/MovieGrid";
 import Pagination from "@/components/ui/Pagination";
 import AdvancedSearchForm from "@/components/search/AdvancedSearchForm";
 import SplashScreen from "@/components/ui/SplashScreen";
+
+const sourceLabels = {
+    ophim: "OPhim",
+    nguonc: "NguonC",
+    kkphim: "KKPhim",
+    vsmov: "VSMOV",
+} as const;
+
+const sourceStyles = {
+    ophim: {
+        backgroundColor: "#E50914",
+        color: "#FFFFFF",
+    },
+    nguonc: {
+        backgroundColor: "#0063E5",
+        color: "#FFFFFF",
+    },
+    kkphim: {
+        backgroundColor: "#F5C518",
+        color: "#111111",
+    },
+    vsmov: {
+        backgroundColor: "#109449",
+        color: "#FFFFFF",
+    },
+} as const;
 
 export default function AdvancedSearchClient() {
     const searchParams = useSearchParams();
@@ -31,7 +57,7 @@ export default function AdvancedSearchClient() {
 
     // Fetch filters data once on mount
     useEffect(() => {
-        Promise.all([getCategories().catch(() => null), getCountries().catch(() => null)])
+        Promise.all([getAllCategories().catch(() => null), getAllCountries().catch(() => null)])
             .then(([genresData, countriesData]) => {
                 setGenres(genresData?.data?.items || []);
                 setCountries(countriesData?.data?.items || []);
@@ -72,13 +98,20 @@ export default function AdvancedSearchClient() {
         return <SplashScreen />;
     }
 
-    const types = movieTypes.map((t: { name: string; slug: string }) => ({
+    const types = getAllMovieTypes().map((t: { name: string; slug: string }) => ({
         name: t.name,
         slug: t.slug,
     }));
 
     const totalItems = pagination.totalItems || movies.length;
     const totalPages = Math.ceil(totalItems / 24) || 1;
+    const groupedResults = {
+        ophim: movies.filter((movie) => movie?._source === "ophim"),
+        nguonc: movies.filter((movie) => movie?._source === "nguonc"),
+        kkphim: movies.filter((movie) => movie?._source === "kkphim"),
+        vsmov: movies.filter((movie) => movie?._source === "vsmov"),
+    };
+    const hasGroupedResults = Object.values(groupedResults).some((items) => items.length > 0);
 
     // Build base URL for pagination
     const baseUrlParams = new URLSearchParams();
@@ -123,9 +156,28 @@ export default function AdvancedSearchClient() {
 
                 {searching ? (
                     <p className="text-foreground-muted text-center py-12">Đang tải kết quả...</p>
-                ) : movies.length > 0 ? (
+                ) : hasGroupedResults ? (
                     <>
-                        <MovieGrid movies={movies} />
+                        {(Object.entries(groupedResults) as Array<[keyof typeof groupedResults, any[]]>).map(([source, sourceMovies]) => (
+                            sourceMovies.length > 0 ? (
+                                <section key={source} className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <div
+                                            className="inline-flex items-center rounded-xl px-4 py-2 shadow-lg"
+                                            style={sourceStyles[source]}
+                                        >
+                                            <h3 className="text-lg md:text-xl font-bold">
+                                                {sourceLabels[source]}
+                                            </h3>
+                                        </div>
+                                        <span className="text-xs font-medium text-foreground-muted bg-white/5 px-2.5 py-1 rounded-full">
+                                            {sourceMovies.length} phim
+                                        </span>
+                                    </div>
+                                    <MovieGrid movies={sourceMovies} />
+                                </section>
+                            ) : null
+                        ))}
                         <Pagination currentPage={page} totalPages={totalPages} baseUrl={baseUrl} />
                     </>
                 ) : (

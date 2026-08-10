@@ -9,6 +9,7 @@ export function generateStaticParams() {
         { type: "phim-le" },
         { type: "tv-shows" },
         { type: "hoat-hinh" },
+        { type: "dang-chieu" },
         { type: "phim-vietsub" },
         { type: "phim-thuyet-minh" },
         { type: "phim-long-tieng" },

@@ -1,10 +1,11 @@
 "use client";
 
+import { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, useSearchParams } from "next/navigation";
 import { Play, Calendar, Clock, Globe, Star } from "lucide-react";
-import { getMovieDetail, getImageUrl } from "@/lib/api/unified";
+import { getMovieDetailBySource, getImageUrl } from "@/lib/api/unified";
 import FavoriteButton from "./FavoriteButton";
 import EpisodeList from "./EpisodeList";
 import SplashScreen from "@/components/ui/SplashScreen";
@@ -16,10 +17,24 @@ interface ClientProps {
 
 export default function MovieDetailPageClient({ params }: ClientProps) {
     const { slug } = params;
-    
+    const searchParams = useSearchParams();
+    const sourceParam = searchParams.get("source");
+    const source = sourceParam === "ophim" || sourceParam === "nguonc" || sourceParam === "kkphim" || sourceParam === "vsmov"
+        ? sourceParam
+        : "ophim";
+
+    useEffect(() => {
+        if (typeof window === "undefined") return;
+        localStorage.setItem("movie-source", source);
+        document.cookie = `movie-source=${source}; path=/; max-age=31536000; SameSite=Lax`;
+        window.dispatchEvent(
+            new StorageEvent("storage", { key: "movie-source", newValue: source })
+        );
+    }, [source]);
+
     const { data, loading } = useMovieData(
-        `movie-detail-${slug}`,
-        () => getMovieDetail(slug)
+        `movie-detail-${source}-${slug}`,
+        () => getMovieDetailBySource(slug, source)
     );
 
     if (loading) {

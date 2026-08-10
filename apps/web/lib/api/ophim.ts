@@ -20,6 +20,53 @@ const filterNSFW = (movies: Movie[]) => {
     );
 };
 
+type OPhimListResponse = {
+    status?: string;
+    items?: Movie[];
+    pagination?: Record<string, unknown>;
+    data?: {
+        items?: Movie[];
+        params?: Record<string, unknown>;
+        titlePage?: string;
+    };
+};
+
+const O_PHIM_TYPE_ENDPOINTS: Record<string, string> = {
+    "phim-le": "/v1/api/danh-sach/phim-le",
+    "phim-bo": "/v1/api/danh-sach/phim-bo",
+    "hoat-hinh": "/v1/api/danh-sach/hoat-hinh",
+    "tv-shows": "/v1/api/danh-sach/tv-shows",
+    "phim-chieu-rap": "/v1/api/danh-sach/phim-chieu-rap",
+    "phim-vietsub": "/v1/api/danh-sach/phim-vietsub",
+    // "phim-long-tieng": "/v1/api/danh-sach/phim-long-tieng",
+    // "phim-thuyet-minh": "/v1/api/danh-sach/phim-thuyet-minh",
+    "subteam": "/v1/api/danh-sach/subteam",
+};
+
+function normalizeListResponse(data: OPhimListResponse, page: number, limit: number, type: string) {
+    if (data?.data?.items) {
+        data.data.items = filterNSFW(data.data.items);
+        return data;
+    }
+
+    const items = filterNSFW(data?.items || []);
+    return {
+        ...data,
+        data: {
+            items,
+            params: {
+                pagination: {
+                    totalItems: Number(data?.pagination?.["totalItems"]) || items.length,
+                    totalItemsPerPage: Number(data?.pagination?.["totalItemsPerPage"]) || limit,
+                    currentPage: Number(data?.pagination?.["currentPage"]) || page,
+                    totalPages: Number(data?.pagination?.["totalPages"]) || 1,
+                },
+            },
+            titlePage: data?.data?.titlePage || type.replace(/-/g, " ").toUpperCase(),
+        },
+    };
+}
+
 // Fetch newly updated movies
 export async function getNewlyUpdatedMovies(page: number = 1) {
     try {
@@ -42,16 +89,20 @@ export async function getNewlyUpdatedMovies(page: number = 1) {
 // Fetch movies by type (phim-le, phim-bo, hoat-hinh, tv-shows, etc.)
 export async function getMoviesByType(type: string, page: number = 1, limit: number = 24) {
     try {
+        const endpoint = O_PHIM_TYPE_ENDPOINTS[type];
+        if (!endpoint) {
+            return { data: { items: [] } };
+        }
+
+        const separator = endpoint.includes("?") ? "&" : "?";
         const response = await fetch(
-            `${BASE_URL}/v1/api/danh-sach/${type}?page=${page}&limit=${limit}`,
+            `${BASE_URL}${endpoint}${separator}page=${page}&limit=${limit}`,
             { next: { revalidate: 3600 } }
         );
+
         if (!response.ok) return { data: { items: [] } };
         const data = await response.json();
-        if (data.data?.items) {
-            data.data.items = filterNSFW(data.data.items);
-        }
-        return data;
+        return normalizeListResponse(data, page, limit, type);
     } catch (err) {
         console.error(`Failed to fetch movies by type ${type}:`, err);
         return { data: { items: [] } };
@@ -161,7 +212,10 @@ export async function advancedSearch(params: {
     // Priority: type -> category -> country -> year -> search
     let endpoint = "tim-kiem";
     if (typeStr && !typeStr.includes(",")) {
-        endpoint = `danh-sach/${typeStr}`;
+        const ophimEndpoint = O_PHIM_TYPE_ENDPOINTS[typeStr];
+        endpoint = ophimEndpoint
+            ? ophimEndpoint.replace(/^\//, "").replace(/^v1\/api\//, "")
+            : "tim-kiem";
     } else if (catStr && !catStr.includes(",")) {
         endpoint = `the-loai/${catStr}`;
     } else if (countryStr && !countryStr.includes(",")) {
@@ -177,10 +231,7 @@ export async function advancedSearch(params: {
 
     if (!response.ok) throw new Error("Failed to search movies");
     const data = await response.json();
-    if (data.data?.items) {
-        data.data.items = filterNSFW(data.data.items);
-    }
-    return data;
+    return normalizeListResponse(data, page, limit, typeStr || "tim-kiem");
 }
 
 // Fetch movie details by slug

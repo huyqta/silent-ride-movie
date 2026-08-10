@@ -26,6 +26,19 @@ const filterNSFW = (movies: Movie[]) => {
     );
 };
 
+const KKPHIM_TYPE_ENDPOINTS: Record<string, string> = {
+    "phim-le": "/v1/api/danh-sach/phim-le",
+    "phim-bo": "/v1/api/danh-sach/phim-bo",
+    "hoat-hinh": "/v1/api/danh-sach/hoat-hinh",
+    "tv-shows": "/v1/api/danh-sach/tv-shows",
+    "phim-chieu-rap": "/v1/api/danh-sach/phim-chieu-rap",
+    "phim-vietsub": "/v1/api/danh-sach/phim-vietsub",
+    "phim-long-tieng": "/v1/api/danh-sach/phim-long-tieng",
+    "phim-thuyet-minh": "/v1/api/danh-sach/phim-thuyet-minh",
+    "subteam": "/v1/api/danh-sach/subteam",
+    "phim-sap-chieu": "/v1/api/danh-sach/phim-sap-chieu",
+};
+
 export async function getNewlyUpdatedMoviesKKPhim(page: number = 1) {
     const response = await fetch(`${KKPHIM_API}/danh-sach/phim-moi-cap-nhat?page=${page}`, {
         next: { revalidate: 3600 },
@@ -39,7 +52,10 @@ export async function getNewlyUpdatedMoviesKKPhim(page: number = 1) {
 }
 
 export async function getMoviesByTypeKKPhim(type: string, page: number = 1, limit: number = 24) {
-    const response = await fetch(`${KKPHIM_API}/v1/api/danh-sach/${type}?page=${page}&limit=${limit}`, {
+    const endpoint = KKPHIM_TYPE_ENDPOINTS[type];
+    if (!endpoint) return { data: { items: [] } };
+
+    const response = await fetch(`${KKPHIM_API}${endpoint}?page=${page}&limit=${limit}`, {
         next: { revalidate: 3600 },
     });
     if (!response.ok) return { data: { items: [] } };
