@@ -1,7 +1,0 @@
-name = "silent-ride"
-compatibility_date = "2026-08-10"
-
-[assets]
-directory = "./out"
-html_handling = "auto-trailing-slash"
-not_found_handling = "single-page-application"

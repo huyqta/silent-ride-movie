@@ -300,8 +300,17 @@ function mapNguonCDetailToOPhim(ncData: any) {
     };
 }
 
-export async function getMovieDetail(slug: string) {
-    const source = getSource();
+export async function getMovieDetail(
+    slug: string,
+    sourceOverride?: "ophim" | "nguonc" | "kkphim" | "vsmov" | string | null
+) {
+    const source = sourceOverride === "ophim"
+        || sourceOverride === "nguonc"
+        || sourceOverride === "kkphim"
+        || sourceOverride === "vsmov"
+        ? sourceOverride
+        : getSource();
+
     return getMovieDetailBySource(slug, source);
 }
 

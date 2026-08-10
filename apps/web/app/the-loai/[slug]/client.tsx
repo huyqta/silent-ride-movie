@@ -1,36 +1,22 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { getMoviesByGenre } from "@/lib/api/unified";
 import MovieGrid from "@/components/movie/MovieGrid";
 import Pagination from "@/components/ui/Pagination";
-import SplashScreen from "@/components/ui/SplashScreen";
-import { useMovieData } from "@/lib/hooks/use-movie-data";
 
 interface ClientProps {
     params: { slug: string };
+    initialData: any;
+    currentPage: number;
 }
 
-export default function GenrePageClient({ params }: ClientProps) {
+export default function GenrePageClient({ params, initialData, currentPage }: ClientProps) {
     const { slug } = params;
-    const searchParams = useSearchParams();
-    const page = searchParams.get("page") || "1";
-    const currentPage = parseInt(page, 10);
 
-    const { data, loading } = useMovieData(
-        `genre-${slug}-p${currentPage}`,
-        () => getMoviesByGenre(slug, currentPage)
-    );
-
-    if (loading) {
-        return <SplashScreen />;
-    }
-
-    const movies = data?.data?.items || [];
-    const pagination = data?.data?.params?.pagination || {};
+    const movies = initialData?.data?.items || [];
+    const pagination = initialData?.data?.params?.pagination || {};
     const totalItems = pagination.totalItems || movies.length;
     const totalPages = Math.ceil(totalItems / 24) || 1;
-    const title = data?.data?.titlePage || `Thể loại: ${slug.replace(/-/g, " ")}`;
+    const title = initialData?.data?.titlePage || `Thể loại: ${slug.replace(/-/g, " ")}`;
 
     return (
         <div className="container mx-auto px-4 py-8">

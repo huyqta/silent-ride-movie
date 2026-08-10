@@ -3,25 +3,21 @@
 import { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound, useSearchParams } from "next/navigation";
+import { notFound } from "next/navigation";
 import { Play, Calendar, Clock, Globe, Star } from "lucide-react";
-import { getMovieDetailBySource, getImageUrl } from "@/lib/api/unified";
+import { getImageUrl } from "@/lib/api/unified";
 import FavoriteButton from "./FavoriteButton";
 import EpisodeList from "./EpisodeList";
 import SplashScreen from "@/components/ui/SplashScreen";
-import { useMovieData } from "@/lib/hooks/use-movie-data";
 
 interface ClientProps {
     params: { slug: string };
+    initialData: any;
+    source: "ophim" | "nguonc" | "kkphim" | "vsmov";
 }
 
-export default function MovieDetailPageClient({ params }: ClientProps) {
+export default function MovieDetailPageClient({ params, initialData, source }: ClientProps) {
     const { slug } = params;
-    const searchParams = useSearchParams();
-    const sourceParam = searchParams.get("source");
-    const source = sourceParam === "ophim" || sourceParam === "nguonc" || sourceParam === "kkphim" || sourceParam === "vsmov"
-        ? sourceParam
-        : "ophim";
 
     useEffect(() => {
         if (typeof window === "undefined") return;
@@ -32,21 +28,16 @@ export default function MovieDetailPageClient({ params }: ClientProps) {
         );
     }, [source]);
 
-    const { data, loading } = useMovieData(
-        `movie-detail-${source}-${slug}`,
-        () => getMovieDetailBySource(slug, source)
-    );
-
-    if (loading) {
+    if (!initialData) {
         return <SplashScreen />;
     }
 
-    if (!data || !data.movie) {
+    if (!initialData.movie) {
         notFound();
     }
 
-    const movie = data.movie;
-    const episodes = data.episodes || movie.episodes || [];
+    const movie = initialData.movie;
+    const episodes = initialData.episodes || movie.episodes || [];
 
     return (
         <div className="min-h-screen">

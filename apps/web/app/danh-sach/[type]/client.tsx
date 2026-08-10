@@ -1,11 +1,8 @@
 "use client";
 
-import { notFound, useSearchParams } from "next/navigation";
-import { getMoviesByType } from "@/lib/api/unified";
+import { notFound } from "next/navigation";
 import MovieGrid from "@/components/movie/MovieGrid";
 import Pagination from "@/components/ui/Pagination";
-import SplashScreen from "@/components/ui/SplashScreen";
-import { useMovieData } from "@/lib/hooks/use-movie-data";
 
 const typeNames: Record<string, string> = {
     "phim-moi": "Phim Mới",
@@ -26,29 +23,19 @@ const typeNames: Record<string, string> = {
 
 interface ClientProps {
     params: { type: string };
+    initialData: any;
+    currentPage: number;
 }
 
-export default function MovieListPageClient({ params }: ClientProps) {
+export default function MovieListPageClient({ params, initialData, currentPage }: ClientProps) {
     const { type } = params;
-    const searchParams = useSearchParams();
-    const page = searchParams.get("page") || "1";
-    const currentPage = parseInt(page, 10);
-
-    const { data, loading } = useMovieData(
-        `list-${type}-p${currentPage}`,
-        () => getMoviesByType(type, currentPage)
-    );
-
-    if (loading) {
-        return <SplashScreen />;
-    }
 
     if (!typeNames[type]) {
         notFound();
     }
 
-    const movies = data?.data?.items || [];
-    const pagination = data?.data?.params?.pagination || {};
+    const movies = initialData?.data?.items || [];
+    const pagination = initialData?.data?.params?.pagination || {};
     const totalItems = pagination.totalItems || movies.length;
     const totalPages = Math.ceil(totalItems / 24) || 1;
 

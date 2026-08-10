@@ -1,106 +1,58 @@
-"use client";
-
 import HeroBanner from "@/components/movie/HeroBanner";
 import MovieSlider from "@/components/movie/MovieSlider";
 import { HeroSkeleton } from "@/components/ui/Skeleton";
 import { getNewlyUpdatedMovies, getMoviesByType } from "@/lib/api/unified";
-import { useMovieData } from "@/lib/hooks/use-movie-data";
-import SplashScreen from "@/components/ui/SplashScreen";
 
-export default function HomePage() {
-  const { data, loading } = useMovieData("home-data", async () => {
-    const [
-      newMovies,
-      singleMovies,
-      seriesMovies,
-      animeMovies,
-      tvShows,
-      vietsubMovies,
-      thuyetMinhMovies,
-      longTiengMovies,
-      boDangChieu,
-      boHoanThanh,
-      sapChieu,
-      subteam,
-      chieuRap
-    ] = await Promise.all([
-      getNewlyUpdatedMovies(1).catch((err) => {
-        console.error("Failed to fetch newly updated movies:", err);
-        return { items: [] };
-      }),
-      getMoviesByType("phim-le", 1).catch((err) => {
-        console.error("Failed to fetch phim-le:", err);
-        return { data: { items: [] } };
-      }),
-      getMoviesByType("phim-bo", 1).catch((err) => {
-        console.error("Failed to fetch phim-bo:", err);
-        return { data: { items: [] } };
-      }),
-      getMoviesByType("hoat-hinh", 1).catch((err) => {
-        console.error("Failed to fetch hoat-hinh:", err);
-        return { data: { items: [] } };
-      }),
-      getMoviesByType("tv-shows", 1).catch((err) => {
-        console.error("Failed to fetch tv-shows:", err);
-        return { data: { items: [] } };
-      }),
-      getMoviesByType("phim-vietsub", 1).catch((err) => {
-        console.error("Failed to fetch phim-vietsub:", err);
-        return { data: { items: [] } };
-      }),
-      getMoviesByType("phim-thuyet-minh", 1).catch((err) => {
-        console.error("Failed to fetch phim-thuyet-minh:", err);
-        return { data: { items: [] } };
-      }),
-      getMoviesByType("phim-long-tieng", 1).catch((err) => {
-        console.error("Failed to fetch phim-long-tieng:", err);
-        return { data: { items: [] } };
-      }),
-      getMoviesByType("phim-bo-dang-chieu", 1).catch((err) => {
-        console.error("Failed to fetch phim-bo-dang-chieu:", err);
-        return { data: { items: [] } };
-      }),
-      getMoviesByType("phim-bo-hoan-thanh", 1).catch((err) => {
-        console.error("Failed to fetch phim-bo-hoan-thanh:", err);
-        return { data: { items: [] } };
-      }),
-      getMoviesByType("phim-sap-chieu", 1).catch((err) => {
-        console.error("Failed to fetch phim-sap-chieu:", err);
-        return { data: { items: [] } };
-      }),
-      getMoviesByType("subteam", 1).catch((err) => {
-        console.error("Failed to fetch subteam:", err);
-        return { data: { items: [] } };
-      }),
-      getMoviesByType("phim-chieu-rap", 1).catch((err) => {
-        console.error("Failed to fetch phim-chieu-rap:", err);
-        return { data: { items: [] } };
-      }),
-    ]);
+async function getHomeData() {
+  const [
+    newMovies,
+    singleMovies,
+    seriesMovies,
+    animeMovies,
+    tvShows,
+    vietsubMovies,
+    thuyetMinhMovies,
+    longTiengMovies,
+    boDangChieu,
+    boHoanThanh,
+    sapChieu,
+    subteam,
+    chieuRap,
+  ] = await Promise.all([
+    getNewlyUpdatedMovies(1).catch(() => ({ items: [] })),
+    getMoviesByType("phim-le", 1).catch(() => ({ data: { items: [] } })),
+    getMoviesByType("phim-bo", 1).catch(() => ({ data: { items: [] } })),
+    getMoviesByType("hoat-hinh", 1).catch(() => ({ data: { items: [] } })),
+    getMoviesByType("tv-shows", 1).catch(() => ({ data: { items: [] } })),
+    getMoviesByType("phim-vietsub", 1).catch(() => ({ data: { items: [] } })),
+    getMoviesByType("phim-thuyet-minh", 1).catch(() => ({ data: { items: [] } })),
+    getMoviesByType("phim-long-tieng", 1).catch(() => ({ data: { items: [] } })),
+    getMoviesByType("phim-bo-dang-chieu", 1).catch(() => ({ data: { items: [] } })),
+    getMoviesByType("phim-bo-hoan-thanh", 1).catch(() => ({ data: { items: [] } })),
+    getMoviesByType("phim-sap-chieu", 1).catch(() => ({ data: { items: [] } })),
+    getMoviesByType("subteam", 1).catch(() => ({ data: { items: [] } })),
+    getMoviesByType("phim-chieu-rap", 1).catch(() => ({ data: { items: [] } })),
+  ]);
 
-    return {
-      newMovies: newMovies?.items || [],
-      singleMovies: singleMovies?.data?.items || [],
-      seriesMovies: seriesMovies?.data?.items || [],
-      animeMovies: animeMovies?.data?.items || [],
-      tvShows: tvShows?.data?.items || [],
-      vietsubMovies: vietsubMovies?.data?.items || [],
-      thuyetMinhMovies: thuyetMinhMovies?.data?.items || [],
-      longTiengMovies: longTiengMovies?.data?.items || [],
-      boDangChieu: boDangChieu?.data?.items || [],
-      boHoanThanh: boHoanThanh?.data?.items || [],
-      sapChieu: sapChieu?.data?.items || [],
-      subteam: subteam?.data?.items || [],
-      chieuRap: chieuRap?.data?.items || [],
-    };
-  });
+  return {
+    newMovies: newMovies?.items || [],
+    singleMovies: singleMovies?.data?.items || [],
+    seriesMovies: seriesMovies?.data?.items || [],
+    animeMovies: animeMovies?.data?.items || [],
+    tvShows: tvShows?.data?.items || [],
+    vietsubMovies: vietsubMovies?.data?.items || [],
+    thuyetMinhMovies: thuyetMinhMovies?.data?.items || [],
+    longTiengMovies: longTiengMovies?.data?.items || [],
+    boDangChieu: boDangChieu?.data?.items || [],
+    boHoanThanh: boHoanThanh?.data?.items || [],
+    sapChieu: sapChieu?.data?.items || [],
+    subteam: subteam?.data?.items || [],
+    chieuRap: chieuRap?.data?.items || [],
+  };
+}
 
-  if (loading && !data) {
-    return <SplashScreen />;
-  }
-
-  if (!data) return null;
-
+export default async function HomePage() {
+  const data = await getHomeData();
   const { newMovies } = data;
   const heroMovie = newMovies[0];
 

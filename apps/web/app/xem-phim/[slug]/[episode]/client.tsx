@@ -3,56 +3,34 @@
 import Link from "next/link";
 import { notFound, useSearchParams } from "next/navigation";
 import { ChevronRight, Home } from "lucide-react";
-import { getMovieDetail } from "@/lib/api/unified";
-import { getMoviePeoples, getMovieDetailNguonC, getMovieDetailPhimApi } from "@/lib/api/ophim";
-import { getMovieDetailVSMov } from "@/lib/api/vsmov";
 import VideoPlayer from "./VideoPlayer";
 import EpisodeSelector from "./EpisodeSelector";
 import MovieInfoDetails from "@/components/movie/MovieInfoDetails";
-import SplashScreen from "@/components/ui/SplashScreen";
-import { useMovieData } from "@/lib/hooks/use-movie-data";
 
 interface ClientProps {
     params: { slug: string; episode: string };
+    initialData: {
+        d: any;
+        p: any;
+        n: any;
+        pa: any;
+        vs: any;
+    };
 }
 
-export default function WatchPageClient({ params }: ClientProps) {
+export default function WatchPageClient({ params, initialData }: ClientProps) {
     const { slug, episode } = params;
     const searchParams = useSearchParams();
     const sv = searchParams.get("sv");
     const requestedServerIndex = sv ? parseInt(sv) : undefined;
 
-    const { data: watchData, loading } = useMovieData(`watch-${slug}`, async () => {
-        // 1. Fetch main movie detail based on active source immediately (essential for playback)
-        const d = await getMovieDetail(slug).catch(() => null);
-        const p = await getMoviePeoples(slug).catch(() => null);
-
-        // 2. Fetch backup sources asynchronously so they appear in the player
-        // We catch all errors locally to prevent a single offline API (like VSMov) from breaking page load
-        const [n, pa, vs] = await Promise.all([
-            getMovieDetailNguonC(slug).catch(() => null),
-            getMovieDetailPhimApi(slug).catch(() => null),
-            // Fetch VSMov detail and safely catch error (returning null to indicate no response, which resolves to no link button)
-            getMovieDetailVSMov(slug).catch((err) => {
-                console.warn("VSMov detail query failed:", err);
-                return null;
-            })
-        ]);
-
-        return { d, p, n, pa, vs };
-    });
-
-    if (loading) {
-        return <SplashScreen />;
-    }
-
-    if (!watchData || !watchData.d || !watchData.d.movie) {
+    if (!initialData || !initialData.d || !initialData.d.movie) {
         notFound();
     }
 
-    const movie = watchData.d.movie;
-    const peoples = watchData.p?.data?.peoples || [];
-    const episodes = watchData.d.episodes || movie.episodes || [];
+    const movie = initialData.d.movie;
+    const peoples = initialData.p?.data?.peoples || [];
+    const episodes = initialData.d.episodes || movie.episodes || [];
 
     // Find current episode and server more efficiently
     let currentEpisode = null;
@@ -118,9 +96,9 @@ export default function WatchPageClient({ params }: ClientProps) {
                     nextEpisodeSlug={nextEpisode?.slug}
                     serverIndex={currentServerIndex}
 
-                    nguonCData={watchData.n}
-                    phimApiData={watchData.pa}
-                    vsmovData={watchData.vs}
+                    nguonCData={initialData.n}
+                    phimApiData={initialData.pa}
+                    vsmovData={initialData.vs}
                 />
             </div>
 
