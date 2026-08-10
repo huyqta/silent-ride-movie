@@ -7,6 +7,7 @@ import MovieGrid from "@/components/movie/MovieGrid";
 import Pagination from "@/components/ui/Pagination";
 import AdvancedSearchForm from "@/components/search/AdvancedSearchForm";
 import SplashScreen from "@/components/ui/SplashScreen";
+import type { Pagination as PaginationType } from "@/types/movie";
 
 const sourceLabels = {
     ophim: "OPhim",
@@ -53,7 +54,12 @@ export default function AdvancedSearchClient() {
     const [movies, setMovies] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [searching, setSearching] = useState(false);
-    const [pagination, setPagination] = useState({ pageRanges: 1, currentPage: 1, totalItems: 0 });
+    const [pagination, setPagination] = useState<PaginationType>({
+        totalItems: 0,
+        totalItemsPerPage: 24,
+        currentPage: 1,
+        totalPages: 1,
+    });
 
     // Fetch filters data once on mount
     useEffect(() => {
@@ -81,9 +87,10 @@ export default function AdvancedSearchClient() {
                 setMovies(searchData?.data?.items || []);
                 setPagination(
                     searchData?.data?.params?.pagination || {
-                        pageRanges: 1,
+                        totalItemsPerPage: limit,
                         currentPage: 1,
                         totalItems: searchData?.data?.items?.length || 0,
+                        totalPages: 1,
                     }
                 );
             })
