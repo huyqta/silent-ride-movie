@@ -53,7 +53,11 @@ const exploreItems = [
     { name: "Subteam", href: "/danh-sach/subteam", icon: Users },
 ];
 
-export default function Header() {
+interface HeaderProps {
+    initialSource?: 'ophim' | 'nguonc' | 'kkphim' | 'vsmov';
+}
+
+export default function Header({ initialSource = 'ophim' }: HeaderProps) {
     const router = useRouter();
     const [isScrolled, setIsScrolled] = useState(false);
     const [searchOpen, setSearchOpen] = useState(false);
@@ -61,12 +65,15 @@ export default function Header() {
     const [activeMenu, setActiveMenu] = useState<string | null>(null);
     const [helpOpen, setHelpOpen] = useState(false);
     const [mounted, setMounted] = useState(false);
+    const [sourceSwitcherOpen, setSourceSwitcherOpen] = useState(false);
+    const sourceSwitcherRef = useRef<HTMLDivElement>(null);
     const querySource = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('source') : null;
     const pathname = usePathname();
     const isSupabaseEnabled = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
     const currentProfile = useProfileStore(state => state.currentProfile);
-    const movieSource = useStore(state => state.movieSource);
+    const storeMovieSource = useStore(state => state.movieSource);
+    const movieSource = mounted ? storeMovieSource : initialSource;
     const setMovieSource = useStore(state => state.setMovieSource);
     const favoriteSlugs = useProfileStore(state => state.favoriteSlugs);
     const watchHistory = useProfileStore(state => state.watchHistory);
@@ -147,6 +154,19 @@ export default function Header() {
             searchInputRef.current.focus();
         }
     }, [searchOpen]);
+
+    // Handle click outside for source switcher
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (sourceSwitcherRef.current && !sourceSwitcherRef.current.contains(event.target as Node)) {
+                setSourceSwitcherOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, []);
 
     // Lock body scroll when mobile menu is open
     useEffect(() => {
@@ -359,25 +379,29 @@ export default function Header() {
                             </motion.button>
 
                             {/* Movie Source Switcher */}
-                            <div className="relative group">
+                            <div className="relative group" ref={sourceSwitcherRef}>
                                 <motion.button
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
+                                    onClick={() => setSourceSwitcherOpen(!sourceSwitcherOpen)}
                                     className="flex items-center gap-2 p-2 px-3 text-xs font-bold transition-all rounded-lg bg-white/5 border"
                                     style={{ borderColor: `${activeColor}60`, color: activeColor }}
                                 >
                                     <Layers className="w-4 h-4" />
                                     <span className="hidden sm:inline uppercase">
-                                        {sourceConfig[movieSource].name}
+                                        {mounted ? sourceConfig[movieSource].name : ""}
                                     </span>
                                 </motion.button>
 
-                                <div className="absolute top-full right-0 mt-2 w-48 glass rounded-xl border border-white/10 shadow-2xl overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                                <div className={`absolute top-full right-0 mt-2 w-48 glass rounded-xl border border-white/10 shadow-2xl overflow-hidden transition-all z-50 ${sourceSwitcherOpen ? 'opacity-100 visible' : 'opacity-0 invisible lg:group-hover:opacity-100 lg:group-hover:visible'}`}>
                                     <div className="p-2 space-y-1">
                                         {(Object.entries(sourceConfig) as [keyof typeof sourceConfig, typeof sourceConfig[keyof typeof sourceConfig]][]).map(([key, cfg]) => (
                                             <button
                                                 key={key}
-                                                onClick={() => handleSourceChange(key)}
+                                                onClick={() => {
+                                                    handleSourceChange(key);
+                                                    setSourceSwitcherOpen(false);
+                                                }}
                                                 className={`w-full flex items-center justify-between pl-3 pr-4 py-2.5 rounded-lg text-sm transition-all border-l-2 ${movieSource === key ? 'bg-white/10' : 'border-transparent text-foreground-secondary hover:bg-white/5 hover:text-white'}`}
                                                 style={movieSource === key ? { borderColor: cfg.hex, color: cfg.hex } : {}}
                                             >

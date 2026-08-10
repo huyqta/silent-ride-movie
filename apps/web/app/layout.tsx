@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import "./globals.css";
+import ProfileGuard from "@/components/auth/ProfileGuard";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,8 +34,6 @@ export const metadata: Metadata = {
   },
 };
 
-import ProfileGuard from "@/components/auth/ProfileGuard";
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -44,6 +43,27 @@ export default function RootLayout({
     <html lang="vi" className="dark">
       <head>
         <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var source = localStorage.getItem("movie-source") || "ophim";
+                  var config = {
+                    ophim:  { hex: '#E50914', hoverHex: '#b20710' },
+                    nguonc: { hex: '#0063E5', hoverHex: '#004db3' },
+                    kkphim: { hex: '#F5C518', hoverHex: '#d4a800' },
+                    vsmov:  { hex: '#6366F1', hoverHex: '#4f46e5' }
+                  }[source] || { hex: '#E50914', hoverHex: '#b20710' };
+                  var primaryText = source === 'kkphim' ? '#000000' : '#ffffff';
+                  document.documentElement.style.setProperty('--primary', config.hex);
+                  document.documentElement.style.setProperty('--primary-hover', config.hoverHex);
+                  document.documentElement.style.setProperty('--primary-text', primaryText);
+                } catch (e) {}
+              })();
+            `
+          }}
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}

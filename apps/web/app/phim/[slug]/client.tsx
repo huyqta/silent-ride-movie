@@ -108,10 +108,10 @@ export default function MovieDetailPageClient({ params }: ClientProps) {
                             const isSingle = movie.type === "single";
                             // Count episodes that have at least one valid URL (across all servers, deduplicated by slug)
                             const slugsWithUrl = new Set(
-                                episodes.flatMap((srv) =>
+                                episodes.flatMap((srv: any) =>
                                     srv.server_data.filter(
-                                        (ep) => ep.link_embed || ep.link_m3u8
-                                    ).map((ep) => ep.slug)
+                                        (ep: any) => ep.link_embed || ep.link_m3u8
+                                    ).map((ep: any) => ep.slug)
                                 )
                             );
                             const urlCount = slugsWithUrl.size;
