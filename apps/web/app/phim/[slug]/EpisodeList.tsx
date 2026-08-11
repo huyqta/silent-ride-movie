@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import type { Episode } from "@/types/movie";
+import { getEpisodeRouteKey, sortEpisodesForDisplay } from "@/lib/episode-utils";
 import { useStore } from "@/lib/store/useStore";
 
 interface EpisodeListProps {
@@ -19,6 +20,7 @@ export default function EpisodeList({ episodes, movieSlug }: EpisodeListProps) {
     if (!episodes || episodes.length === 0) return null;
 
     const currentServer = episodes[activeServer];
+    const sortedEpisodes = sortEpisodesForDisplay(currentServer?.server_data || []);
 
     return (
         <div className="space-y-4">
@@ -42,12 +44,13 @@ export default function EpisodeList({ episodes, movieSlug }: EpisodeListProps) {
 
             {/* Episode grid */}
             <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-2">
-                {currentServer?.server_data?.map((ep) => {
-                    const isWatching = progress?.episode === ep.slug;
+                {sortedEpisodes.map((ep) => {
+                    const episodeKey = getEpisodeRouteKey(ep);
+                    const isWatching = progress?.episode === episodeKey;
                     return (
                         <Link
-                            key={ep.slug}
-                            href={`/xem-phim/${movieSlug}/${ep.slug}?sv=${activeServer}`}
+                            key={episodeKey}
+                            href={`/xem-phim/${movieSlug}/${episodeKey}?sv=${activeServer}`}
                             prefetch={false}
                             className={`relative px-3 py-2 text-center text-sm font-medium rounded-lg transition-colors ${isWatching
                                     ? "bg-primary text-white ring-2 ring-primary ring-offset-2 ring-offset-background"

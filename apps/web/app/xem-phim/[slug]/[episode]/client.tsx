@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { notFound, useSearchParams } from "next/navigation";
 import { ChevronRight, Home } from "lucide-react";
+import { getEpisodeRouteKey, isEpisodeRouteMatch } from "@/lib/episode-utils";
 import VideoPlayer from "./VideoPlayer";
 import EpisodeSelector from "./EpisodeSelector";
 import MovieInfoDetails from "@/components/movie/MovieInfoDetails";
@@ -38,7 +39,7 @@ export default function WatchPageClient({ params, initialData }: ClientProps) {
 
     // Try finding in requested server first
     if (requestedServerIndex !== undefined && episodes[requestedServerIndex]) {
-        currentEpisode = episodes[requestedServerIndex].server_data?.find((ep: { slug: string }) => ep.slug === episode);
+        currentEpisode = episodes[requestedServerIndex].server_data?.find((ep: any) => isEpisodeRouteMatch(ep, episode));
         if (currentEpisode) {
             currentServerIndex = requestedServerIndex;
         }
@@ -47,12 +48,12 @@ export default function WatchPageClient({ params, initialData }: ClientProps) {
     // Default to search in all servers if not found in requested server
     if (!currentEpisode) {
         currentServerIndex = episodes.findIndex((server: any) => 
-            server.server_data?.some((ep: { slug: string }) => ep.slug === episode)
+            server.server_data?.some((ep: any) => isEpisodeRouteMatch(ep, episode))
         );
 
         if (currentServerIndex !== -1) {
             const serverData = episodes[currentServerIndex].server_data;
-            currentEpisode = serverData.find((ep: { slug: string }) => ep.slug === episode);
+            currentEpisode = serverData.find((ep: any) => isEpisodeRouteMatch(ep, episode));
         }
     }
 
@@ -92,8 +93,8 @@ export default function WatchPageClient({ params, initialData }: ClientProps) {
                     episodeName={currentEpisode.name}
                     embedUrl={currentEpisode.link_embed}
                     m3u8Url={currentEpisode.link_m3u8}
-                    prevEpisodeSlug={prevEpisode?.slug}
-                    nextEpisodeSlug={nextEpisode?.slug}
+                    prevEpisodeSlug={prevEpisode ? getEpisodeRouteKey(prevEpisode) : undefined}
+                    nextEpisodeSlug={nextEpisode ? getEpisodeRouteKey(nextEpisode) : undefined}
                     serverIndex={currentServerIndex}
 
                     nguonCData={initialData.n}

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Play, Calendar, Clock, Globe, Star } from "lucide-react";
 import { getImageUrl } from "@/lib/api/unified";
+import { countPlayableEpisodes, getEpisodeRouteKey } from "@/lib/episode-utils";
 import FavoriteButton from "./FavoriteButton";
 import EpisodeList from "./EpisodeList";
 import SplashScreen from "@/components/ui/SplashScreen";
@@ -112,15 +113,7 @@ export default function MovieDetailPageClient({ params, initialData, source }: C
                         {/* Episode info */}
                         {movie.episode_current && (() => {
                             const isSingle = movie.type === "single";
-                            // Count episodes that have at least one valid URL (across all servers, deduplicated by slug)
-                            const slugsWithUrl = new Set(
-                                episodes.flatMap((srv: any) =>
-                                    srv.server_data.filter(
-                                        (ep: any) => ep.link_embed || ep.link_m3u8
-                                    ).map((ep: any) => ep.slug)
-                                )
-                            );
-                            const urlCount = slugsWithUrl.size;
+                            const urlCount = countPlayableEpisodes(episodes);
                             const hasUrl = urlCount > 0;
 
                             return (
@@ -148,7 +141,7 @@ export default function MovieDetailPageClient({ params, initialData, source }: C
                             <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-6">
                                 {movie.category.map((cat: { slug: string; name: string }) => (
                                     <Link
-                                        key={cat.slug}
+                                        key={source + '-' + cat.slug}
                                         href={`/the-loai/${cat.slug}`}
                                         prefetch={false}
                                         className="px-3 py-1 bg-white/10 hover:bg-white/20 text-sm rounded-full transition-colors"
@@ -163,7 +156,7 @@ export default function MovieDetailPageClient({ params, initialData, source }: C
                         <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 mb-8">
                             {episodes.length > 0 && episodes[0]?.server_data?.length > 0 && (
                                 <Link
-                                    href={`/xem-phim/${movie.slug}/${episodes[0].server_data[0].slug}`}
+                                    href={`/xem-phim/${movie.slug}/${getEpisodeRouteKey(episodes[0].server_data[0])}`}
                                     prefetch={false}
                                     className="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg transition-colors shadow-lg shadow-primary/30"
                                 >

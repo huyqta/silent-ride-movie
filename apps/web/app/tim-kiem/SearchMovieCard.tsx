@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
 import MovieCard from "@/components/movie/MovieCard";
 import { getUrlCountBySource } from "@/lib/api/unified";
 import type { Movie } from "@/types/movie";
@@ -15,8 +14,6 @@ interface SearchMovieCardProps {
 }
 
 export default function SearchMovieCard({ movie, source, index = 0 }: SearchMovieCardProps) {
-    const router = useRouter();
-    const searchParams = useSearchParams();
     const containerRef = useRef<HTMLDivElement>(null);
 
     // undefined = loading, -1 = error, 0+ = actual count
@@ -44,22 +41,10 @@ export default function SearchMovieCard({ movie, source, index = 0 }: SearchMovi
         return () => observer.disconnect();
     }, [movie.slug, source, fetched]);
 
-    const handleClick = () => {
-        if (typeof window !== "undefined") {
-            localStorage.setItem("movie-source", source);
-            window.dispatchEvent(
-                new StorageEvent("storage", { key: "movie-source", newValue: source })
-            );
-        }
-        const params = new URLSearchParams(searchParams.toString());
-        params.set("source", source);
-        router.replace(`/tim-kiem?${params.toString()}`, { scroll: false });
-    };
-
     return (
-        <div ref={containerRef} onClick={handleClick}>
+        <div ref={containerRef}>
             <MovieCard
-                movie={movie}
+                movie={{ ...movie, _source: source }}
                 index={index}
                 showProgress={false}
                 urlCount={urlCount}

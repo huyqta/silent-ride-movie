@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { Episode } from "@/types/movie";
+import { getEpisodeRouteKey, sortEpisodesForDisplay } from "@/lib/episode-utils";
 
 interface EpisodeSelectorProps {
     episodes: Episode[];
@@ -22,6 +23,7 @@ export default function EpisodeSelector({
     if (!episodes || episodes.length === 0) return null;
 
     const currentServer = episodes[activeServer];
+    const sortedEpisodes = sortEpisodesForDisplay(currentServer?.server_data || []);
 
     return (
         <div className="space-y-4">
@@ -45,13 +47,14 @@ export default function EpisodeSelector({
 
             {/* Episode grid */}
             <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 lg:grid-cols-12 xl:grid-cols-16 gap-2">
-                {currentServer?.server_data?.map((ep: { slug: string; name: string }) => {
-                    const isCurrent = ep.slug === currentEpisode;
+                {sortedEpisodes.map((ep: { slug: string; name: string }) => {
+                    const episodeKey = getEpisodeRouteKey(ep);
+                    const isCurrent = episodeKey === currentEpisode;
                     
                     if (isCurrent) {
                         return (
                             <div
-                                key={ep.slug}
+                                key={episodeKey}
                                 className="px-3 py-2 text-center text-sm font-medium rounded-lg bg-primary text-white cursor-default"
                             >
                                 {ep.name}
@@ -61,8 +64,8 @@ export default function EpisodeSelector({
 
                     return (
                         <Link
-                            key={ep.slug}
-                            href={`/xem-phim/${movieSlug}/${ep.slug}?sv=${activeServer}`}
+                            key={episodeKey}
+                            href={`/xem-phim/${movieSlug}/${episodeKey}?sv=${activeServer}`}
                             prefetch={false}
                             className="px-3 py-2 text-center text-sm font-medium rounded-lg transition-colors bg-white/10 hover:bg-white/20 text-foreground-secondary hover:text-white"
                         >
@@ -74,4 +77,3 @@ export default function EpisodeSelector({
         </div>
     );
 }
-

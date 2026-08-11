@@ -2,6 +2,7 @@ import * as ophim from "./ophim";
 import * as nguonc from "./nguonc";
 import * as kkphim from "./kkphim";
 import * as vsmov from "./vsmov";
+import { countPlayableEpisodes } from "@/lib/episode-utils";
 
 type Source = "ophim" | "nguonc" | "kkphim" | "vsmov";
 type HeaderItem = { name: string; slug: string };
@@ -349,15 +350,7 @@ export async function getMovieDetailBySource(
 
 /** Count of unique episode slugs that have at least one valid URL (embed or m3u8). */
 function countUrls(episodes: any[]): number {
-    if (!Array.isArray(episodes) || episodes.length === 0) return 0;
-    const slugs = new Set(
-        episodes.flatMap((srv) =>
-            (srv.server_data || [])
-                .filter((ep: any) => ep.link_embed || ep.link_m3u8)
-                .map((ep: any) => ep.slug || ep.name)
-        )
-    );
-    return slugs.size;
+    return countPlayableEpisodes(episodes);
 }
 
 /** Fetch movie detail from a specific source and return the actual URL count. */
