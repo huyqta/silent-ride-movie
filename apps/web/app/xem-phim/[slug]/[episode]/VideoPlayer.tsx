@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ChevronLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useStore } from "@/lib/store/useStore";
 import { useProfileStore } from "@/lib/store/useProfileStore";
@@ -414,12 +414,13 @@ export default function VideoPlayer({
                     </div>
                 ) : null}
 
-                {/* Next episode button — hiển thị khi hover, ẩn khi đang load */}
+                {/* Keep episode navigation visible on both pointer and touch devices. */}
                 {/* {!isCheckingSources && nextEpisodeSlug && (
-                    <div className={`absolute ${useEmbed ? 'bottom-4' : 'bottom-16'} right-4 z-30 opacity-0 group-hover:opacity-100 transition-opacity duration-200`}>
+                    <div className={`absolute ${useEmbed ? 'bottom-4' : 'bottom-16'} right-4 z-30`}>
                         <button
                             onClick={() => router.push(`/xem-phim/${movieSlug}/${nextEpisodeSlug}${serverIndex !== undefined ? `?sv=${serverIndex}` : ''}`)}
-                            className="flex items-center gap-1.5 bg-black/70 hover:bg-black/90 backdrop-blur-sm text-white text-sm font-semibold px-4 py-2 rounded-xl border border-white/20 hover:border-white/40 transition-all shadow-xl"
+                            aria-label="Đi đến tập tiếp theo"
+                            className="flex items-center gap-1.5 bg-primary hover:bg-primary-hover text-white text-sm font-semibold px-4 py-2 rounded-xl border border-white/20 transition-colors shadow-xl"
                         >
                             Tập tiếp theo
                             <ChevronRight className="w-4 h-4" />
@@ -430,8 +431,33 @@ export default function VideoPlayer({
 
             {/* Controls bar — Redundancy options */}
             <div className="mt-6 flex flex-wrap items-center justify-end p-4 bg-neutral-900/50 backdrop-blur-xl rounded-2xl border border-white/5 shadow-xl gap-3">
-                <span className="text-[10px] font-black tracking-widest text-foreground-muted mr-auto px-2 uppercase">Nguồn phát dự phòng</span>
-
+                {/* <span className="text-[10px] font-black tracking-widest text-foreground-muted mr-auto px-2 uppercase">Nguồn phát dự phòng</span> */}
+                <div className="flex mr-auto gap-4">
+                    {!isCheckingSources && prevEpisodeSlug && (
+                        <div className={`${useEmbed ? 'bottom-4' : 'bottom-16'} right-4 z-30`}>
+                            <button
+                                onClick={() => router.push(`/xem-phim/${movieSlug}/${prevEpisodeSlug}${serverIndex !== undefined ? `?sv=${serverIndex}` : ''}`)}
+                                aria-label="Đi đến tập trước"
+                                className="flex items-center gap-1.5 bg-primary hover:bg-primary-hover text-white text-sm font-semibold px-4 py-2 rounded-xl border border-white/20 transition-colors shadow-xl"
+                            >
+                                <ChevronLeft className="w-4 h-4" />
+                                Tập trước [{prevEpisodeSlug}]
+                            </button>
+                        </div>
+                    )}
+                    {!isCheckingSources && nextEpisodeSlug && (
+                        <div className={`${useEmbed ? 'bottom-4' : 'bottom-16'} right-4 z-30`}>
+                            <button
+                                onClick={() => router.push(`/xem-phim/${movieSlug}/${nextEpisodeSlug}${serverIndex !== undefined ? `?sv=${serverIndex}` : ''}`)}
+                                aria-label="Đi đến tập tiếp theo"
+                                className="flex items-center gap-1.5 bg-primary hover:bg-primary-hover text-white text-sm font-semibold px-4 py-2 rounded-xl border border-white/20 transition-colors shadow-xl"
+                            >
+                                Tập sau [{nextEpisodeSlug}]
+                                <ChevronRight className="w-4 h-4" />
+                            </button>
+                        </div>
+                    )}
+                </div>
                 {m3u8Url && (
                     <button
                         onClick={() => switchToM3u8(m3u8Url, "op-m3u8")}

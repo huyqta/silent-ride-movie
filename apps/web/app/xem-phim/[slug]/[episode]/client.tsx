@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { notFound, useSearchParams } from "next/navigation";
 import { ChevronRight, Home } from "lucide-react";
-import { getEpisodeRouteKey, isEpisodeRouteMatch } from "@/lib/episode-utils";
+import { getEpisodeRouteKey, isEpisodeRouteMatch, sortEpisodesForDisplay } from "@/lib/episode-utils";
 import VideoPlayer from "./VideoPlayer";
 import EpisodeSelector from "./EpisodeSelector";
 import MovieInfoDetails from "@/components/movie/MovieInfoDetails";
@@ -61,7 +61,7 @@ export default function WatchPageClient({ params, initialData }: ClientProps) {
         notFound();
     }
 
-    const serverData = episodes[currentServerIndex]?.server_data || [];
+    const serverData = sortEpisodesForDisplay(episodes[currentServerIndex]?.server_data || []);
     const currentEpisodeIndex = serverData.indexOf(currentEpisode);
     const prevEpisode = serverData[currentEpisodeIndex - 1];
     const nextEpisode = serverData[currentEpisodeIndex + 1];
