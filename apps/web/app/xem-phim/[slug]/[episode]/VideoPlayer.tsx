@@ -438,10 +438,10 @@ export default function VideoPlayer({
                             <button
                                 onClick={() => router.push(`/xem-phim/${movieSlug}/${prevEpisodeSlug}${serverIndex !== undefined ? `?sv=${serverIndex}` : ''}`)}
                                 aria-label="Đi đến tập trước"
-                                className="flex items-center gap-1.5 bg-primary hover:bg-primary-hover text-white text-sm font-semibold px-4 py-2 rounded-xl border border-white/20 transition-colors shadow-xl"
+                                className="flex items-center gap-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-semibold px-4 py-2 rounded-xl border border-white/20 transition-colors shadow-xl"
                             >
                                 <ChevronLeft className="w-4 h-4" />
-                                Tập trước [{prevEpisodeSlug}]
+                                [{prevEpisodeSlug}]
                             </button>
                         </div>
                     )}
@@ -450,9 +450,9 @@ export default function VideoPlayer({
                             <button
                                 onClick={() => router.push(`/xem-phim/${movieSlug}/${nextEpisodeSlug}${serverIndex !== undefined ? `?sv=${serverIndex}` : ''}`)}
                                 aria-label="Đi đến tập tiếp theo"
-                                className="flex items-center gap-1.5 bg-primary hover:bg-primary-hover text-white text-sm font-semibold px-4 py-2 rounded-xl border border-white/20 transition-colors shadow-xl"
+                                className="flex items-center gap-1.5 bg-primary hover:bg-primary-hover text-white text-xs font-semibold px-4 py-2 rounded-xl border border-white/20 transition-colors shadow-xl"
                             >
-                                Tập sau [{nextEpisodeSlug}]
+                                [{nextEpisodeSlug}]
                                 <ChevronRight className="w-4 h-4" />
                             </button>
                         </div>
